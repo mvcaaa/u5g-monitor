@@ -1,0 +1,121 @@
+# U5G monitoring stack. Host-agnostic: any Docker host with compose v2 (TrueNAS: see docs/TRUENAS.md).
+# Bring up:  ./scripts/init.sh   (once)   then   docker compose up -d --build
+name: u5g
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  prometheus:
+    <<: *restart
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=1y
+      - --storage.tsdb.retention.size=2GB
+    volumes:
+      - ./config/prometheus/prometheus.rendered.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+
+  grafana:
+    <<: *restart
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_DEFAULT_THEME: dark
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN in .env}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:?set TELEGRAM_CHAT_ID in .env}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on: [prometheus]
+
+  blackbox:
+    <<: *restart
+    image: prom/blackbox-exporter:v0.29.0
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    cap_add: [NET_RAW]
+    volumes:
+      - ./config/blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+
+  node-exporter:
+    <<: *restart
+    image: prom/node-exporter:v1.9.1
+    # only the textfile collector: we expose agent metrics, not host metrics
+    command:
+      - --collector.disable-defaults
+      - --collector.textfile
+      - --collector.textfile.directory=/textfile
+    volumes:
+      - ./data/textfile:/textfile:ro
+
+  unpoller:
+    <<: *restart
+    image: ghcr.io/unpoller/unpoller:latest   # pin to the tag that works for you after the first run
+    environment:
+      UP_UNIFI_DEFAULT_URL: ${UNIFI_URL:?set UNIFI_URL in .env}
+      UP_UNIFI_DEFAULT_API_KEY: ${UNIFI_API_KEY:?set UNIFI_API_KEY in .env}
+      UP_UNIFI_DEFAULT_VERIFY_SSL: "false"
+      UP_UNIFI_DEFAULT_SAVE_DPI: "false"
+      UP_PROMETHEUS_HTTP_LISTEN: 0.0.0.0:9130
+      UP_INFLUXDB_DISABLE: "true"
+
+  speedtest-tracker:
+    <<: *restart
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: ${TZ:-Europe/Helsinki}
+      APP_KEY: ${SPEEDTEST_APP_KEY:?run scripts/init.sh to generate SPEEDTEST_APP_KEY}
+      APP_URL: http://localhost:${SPEEDTEST_PORT:-8080}
+      DB_CONNECTION: sqlite
+      SPEEDTEST_SCHEDULE: ${SPEEDTEST_SCHEDULE:-7 * * * *}
+      SPEEDTEST_SERVERS: ${SPEEDTEST_SERVERS:-14164,22669,14928}
+      PRUNE_RESULTS_OLDER_THAN: "0"
+      # Prometheus integration; the docker subnet must be allowed (verify in UI: Settings -> Data Integration)
+      PROMETHEUS_ENABLED: "true"
+      PROMETHEUS_ALLOWED_IPS: ${SPEEDTEST_PROM_ALLOWED_IPS:-172.16.0.0/12,192.168.0.0/16,10.0.0.0/8}
+    volumes:
+      - speedtest-config:/config
+    ports:
+      - "${SPEEDTEST_PORT:-8080}:80"
+
+  # probes + watchdog; the only component that talks to the modem (ssh, restricted key).
+  # No image build needed (works as a TrueNAS Custom App too): stock alpine + scripts mounted read-only.
+  agent:
+    <<: *restart
+    image: alpine:3.20
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache bash curl openssh-client iputils gawk util-linux coreutils tzdata >/dev/null && exec /app/entrypoint.sh"]
+    environment:
+      TZ: ${TZ:-Europe/Helsinki}
+      D: /data
+      DIR: /data
+      PROBE: /app/probe.sh
+      MODEM_HOST: ${U5G_IP}
+      MODEM_USER: ${U5G_SSH_USER:-admin}
+      MODEM_SSH_PORT: ${U5G_SSH_PORT:-2222}
+      THRESH: ${WD_THRESH:-8000000}
+      NEED: ${WD_NEED:-3}
+      MININT: ${WD_MIN_INTERVAL:-10800}
+      MAXDAY: ${WD_MAX_PER_DAY:-4}
+    volumes:
+      - ./agent:/app:ro
+      - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /data/state/heartbeat 2>/dev/null || echo 0) )) -lt 900"]
+      interval: 60s
+      timeout: 5s
+      start_period: 180s
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  speedtest-config:

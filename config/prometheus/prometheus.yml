@@ -1,0 +1,44 @@
+# Prometheus config for the U5G monitoring stack. Hostnames are docker-compose service names.
+global:
+  scrape_interval: 60s
+  evaluation_interval: 60s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # UniFi controller -> U5G radio/WAN metrics (needs UP_UNIFI_DEFAULT_* in .env)
+  - job_name: unpoller
+    static_configs:
+      - targets: ['unpoller:9130']
+
+  # Hourly speed tests (Speedtest Tracker exposes /prometheus; allowed IPs must include the docker subnet)
+  - job_name: speedtest_tracker
+    metrics_path: /prometheus
+    static_configs:
+      - targets: ['speedtest-tracker:80']
+
+  # ICMP path monitoring: U5G local hop, DNA test server, public DNS
+  - job_name: blackbox_icmp
+    metrics_path: /probe
+    scrape_interval: 15s
+    params:
+      module: [icmp]
+    static_configs:
+      - targets: ['__U5G_IP__', 'nopeus.dna.fi', '1.1.1.1', '8.8.8.8']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+
+  # textfile metrics written by the agent container: u5g_probe_*, u5g_watchdog_*
+  - job_name: node_textfile
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # NOT captured in this repo (see docs/KNOWN_GAPS.md): job u5g_ca (json_exporter reading carrier-aggregation
+  # data from the UniFi API; the dashboard panel 106 and u5g_ca_* metrics depend on it).

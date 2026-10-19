@@ -1,0 +1,1808 @@
+{
+ "title": "U5G Radio Monitor (EN)",
+ "uid": "u5g-radio-monitor-en",
+ "tags": [
+  "u5g",
+  "lte",
+  "5g"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 4,
+ "refresh": "1m",
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "panels": [
+  {
+   "id": 100,
+   "type": "row",
+   "title": "Speed (active probe, Speedtest Tracker)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "id": 101,
+   "type": "timeseries",
+   "title": "Speed: download / upload",
+   "description": "Measured speed from the latest test (value holds until the next test).",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 1
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "max(speedtest_tracker_download_bits)",
+     "legendFormat": "download"
+    },
+    {
+     "refId": "B",
+     "expr": "max(speedtest_tracker_upload_bits)",
+     "legendFormat": "upload"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "drawStyle": "line",
+      "lineInterpolation": "stepAfter",
+      "lineWidth": 2,
+      "showPoints": "always",
+      "pointSize": 7,
+      "spanNulls": true,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 102,
+   "type": "timeseries",
+   "title": "Probe latency and jitter, ms",
+   "description": "Ping/latency from the Speedtest Tracker test.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 1
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "max by (__name__) ({__name__=~\"speedtest_tracker_.*(ping|latency_iqm).*_ms\"})",
+     "legendFormat": "{{__name__}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms",
+     "custom": {
+      "drawStyle": "line",
+      "lineInterpolation": "stepAfter",
+      "lineWidth": 2,
+      "showPoints": "always",
+      "pointSize": 7,
+      "spanNulls": true,
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 103,
+   "type": "row",
+   "title": "Path: latency and loss (ICMP, every 15 s)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 9
+   }
+  },
+  {
+   "id": 104,
+   "type": "timeseries",
+   "title": "RTT to targets",
+   "description": "First target (the modem's own address) - U5G local hop; nopeus.dna.fi - DNA Helsinki server (also the speed-test server); 1.1.1.1 and 8.8.8.8 - public internet.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 10
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\"}",
+     "legendFormat": "{{instance}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 105,
+   "type": "timeseries",
+   "title": "Packet loss (5 min average)",
+   "description": "Share of unanswered ICMP echo requests. If loss appears for DNA and external targets but not for the U5G, the problem is on the radio link or in the operator network.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 10
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "1 - avg_over_time(probe_success{job=\"blackbox_icmp\"}[5m])",
+     "legendFormat": "{{instance}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 1,
+   "type": "row",
+   "title": "Status and data freshness",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 18
+   }
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Modem data age",
+   "description": "Seconds since the device's last_seen in the controller. Steady growth = modem/controller stopped updating statistics.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 19
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "time() - u5g_last_seen_timestamp_seconds",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 180
+       },
+       {
+        "color": "red",
+        "value": 600
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "SNR changes in 10 min",
+   "description": "0 = SNR value unchanged for 10 minutes, almost certainly stale data.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 19
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "changes(unpoller_device_mbb_snr_db[10m])",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "LTE / NR carriers",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 19
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_mbb_carriers",
+     "instant": true,
+     "legendFormat": "{{carrier_type}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "blue",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name"
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Total bandwidth",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 19
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_mbb_bandwidth_mhz",
+     "instant": true,
+     "legendFormat": "{{direction}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "blue",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name"
+   }
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "Scrape targets",
+   "description": "1 = target reachable by Prometheus.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 8,
+    "x": 16,
+    "y": 19
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "up{job=~\"unpoller|u5g_ca\"}",
+     "instant": true,
+     "legendFormat": "{{job}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 0,
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "DOWN",
+         "color": "red",
+         "index": 0
+        },
+        "1": {
+         "text": "UP",
+         "color": "green",
+         "index": 1
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value_and_name"
+   }
+  },
+  {
+   "id": 7,
+   "type": "row",
+   "title": "Configuration over time",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 23
+   }
+  },
+  {
+   "id": 8,
+   "type": "state-timeline",
+   "title": "Radio configuration: cell, PCI, bands",
+   "description": "Each row is a unique label combination. A change of cell or band creates a new row.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 24,
+    "x": 0,
+    "y": 24
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_mbb_info",
+     "legendFormat": "cell {{cell_id}} | PCI {{pci}} | NR {{band}} | LTE EARFCN {{channel}} | {{rat}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "fillOpacity": 75,
+      "lineWidth": 0
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "active",
+         "color": "green",
+         "index": 0
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "mergeValues": true,
+    "showValue": "never",
+    "alignValue": "left",
+    "rowHeight": 0.8,
+    "legend": {
+     "showLegend": false
+    }
+   }
+  },
+  {
+   "id": 9,
+   "type": "state-timeline",
+   "title": "Carrier aggregation",
+   "description": "CA composition: each LTE and NR carrier on its own row. Source: json_exporter (ca_lte / ca_nr fields).",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 24,
+    "x": 0,
+    "y": 31
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_ca_lte_present",
+     "legendFormat": "LTE B{{band}} EARFCN {{earfcn}} primary={{primary}}"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_ca_nr_present",
+     "legendFormat": "NR n{{band}} ARFCN {{dl_arfcn}} primary={{primary}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "fillOpacity": 75,
+      "lineWidth": 0
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "in aggregation",
+         "color": "blue",
+         "index": 0
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "blue",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "mergeValues": true,
+    "showValue": "never",
+    "alignValue": "left",
+    "rowHeight": 0.8,
+    "legend": {
+     "showLegend": false
+    }
+   }
+  },
+  {
+   "id": 10,
+   "type": "row",
+   "title": "Signal quality (5 min average)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 38
+   }
+  },
+  {
+   "id": 11,
+   "type": "timeseries",
+   "title": "SNR / SINR, dB",
+   "description": "Instantaneous SNR fluctuates by 2-10 dB within one cell, so a 5-minute average is shown.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 39
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "avg_over_time(unpoller_device_mbb_snr_db[5m])",
+     "legendFormat": "LTE SNR"
+    },
+    {
+     "refId": "B",
+     "expr": "avg_over_time(unpoller_device_mbb_nr_snr_db[5m])",
+     "legendFormat": "NR SNR"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "dB",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 12,
+   "type": "timeseries",
+   "title": "RSRP, dBm",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 39
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "avg_over_time(unpoller_device_mbb_rsrp_dbm[5m])",
+     "legendFormat": "LTE RSRP"
+    },
+    {
+     "refId": "B",
+     "expr": "avg_over_time(unpoller_device_mbb_nr_rsrp_dbm[5m])",
+     "legendFormat": "NR RSRP"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "dBm",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 13,
+   "type": "timeseries",
+   "title": "RSRQ, dB",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 47
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "avg_over_time(unpoller_device_mbb_rsrq_db[5m])",
+     "legendFormat": "LTE RSRQ"
+    },
+    {
+     "refId": "B",
+     "expr": "avg_over_time(unpoller_device_mbb_nr_rsrq_db[5m])",
+     "legendFormat": "NR RSRQ"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "dB",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 14,
+   "type": "timeseries",
+   "title": "Maximum network bitrate (ceiling, not measured speed)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 47
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_mbb_max_bitrate_bps{direction=\"dl\"}",
+     "legendFormat": "{{carrier_type}} down"
+    },
+    {
+     "refId": "B",
+     "expr": "unpoller_device_mbb_max_bitrate_bps{direction=\"ul\"}",
+     "legendFormat": "{{carrier_type}} up"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 15,
+   "type": "row",
+   "title": "WAN load and latency (context)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 55
+   }
+  },
+  {
+   "id": 16,
+   "type": "timeseries",
+   "title": "WAN traffic eth4",
+   "description": "Shows link utilisation, not link quality: when idle, both graphs are low in good and bad conditions alike.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 56
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_wan_receive_rate_bytes{name=\"UXG Max\",port=\"eth4\"} * 8",
+     "legendFormat": "down"
+    },
+    {
+     "refId": "B",
+     "expr": "unpoller_device_wan_transmit_rate_bytes{name=\"UXG Max\",port=\"eth4\"} * 8",
+     "legendFormat": "up"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 15,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 17,
+   "type": "timeseries",
+   "title": "WAN latency (gateway)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 56
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_uplink_latency_seconds{name=\"UXG Max\",port=\"all\"}",
+     "legendFormat": "latency"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 106,
+   "type": "timeseries",
+   "title": "WAN download and secondary carriers",
+   "description": "Blue line - WAN download rate. 0/1 fill - whether a secondary LTE carrier (SCell) is currently active. If SCell bursts coincide with traffic bursts, this is normal carrier activation under load.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 64
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "unpoller_device_wan_receive_rate_bytes{name=\"UXG Max\",port=\"eth4\"} * 8",
+     "legendFormat": "WAN down"
+    },
+    {
+     "refId": "B",
+     "expr": "max(u5g_ca_lte_present{primary=\"false\"}) or vector(0)",
+     "legendFormat": "secondary LTE carrier active"
+    },
+    {
+     "refId": "C",
+     "expr": "max(u5g_ca_lte_present{primary=\"false\",band=\"3\"}) or vector(0)",
+     "legendFormat": "of which B3"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 15,
+      "spanNulls": false
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "secondary.*|of which.*"
+      },
+      "properties": [
+       {
+        "id": "custom.axisPlacement",
+        "value": "right"
+       },
+       {
+        "id": "custom.lineInterpolation",
+        "value": "stepAfter"
+       },
+       {
+        "id": "custom.fillOpacity",
+        "value": 30
+       },
+       {
+        "id": "unit",
+        "value": "none"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 1
+       },
+       {
+        "id": "custom.axisLabel",
+        "value": "0 / 1"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 200,
+   "type": "row",
+   "title": "TrueNAS probe (every 5 min)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 72
+   },
+   "panels": []
+  },
+  {
+   "id": 201,
+   "type": "timeseries",
+   "title": "Probe speed: DNA vs Cloudflare",
+   "description": "5 MB download from TrueNAS via the U5G. DNA ≪ Cloudflare means destination-dependent degradation (episode signature).",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 73
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_probe_download_bits_per_second{target=\"dna\"}",
+     "legendFormat": "DNA"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_probe_download_bits_per_second{target=\"cloudflare\"}",
+     "legendFormat": "Cloudflare"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false,
+      "showPoints": "always",
+      "pointSize": 5
+     },
+     "min": 0,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 8000000
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 202,
+   "type": "timeseries",
+   "title": "Ping under load (during download)",
+   "description": "Average and max RTT to nopeus.dna.fi measured during the download (queueing/bufferbloat).",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 73
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_probe_loaded_rtt_avg_seconds",
+     "legendFormat": "RTT avg"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_probe_loaded_rtt_max_seconds",
+     "legendFormat": "RTT max"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false,
+      "showPoints": "always",
+      "pointSize": 5
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 203,
+   "type": "timeseries",
+   "title": "Loss under load",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 81
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_probe_loaded_loss_ratio",
+     "legendFormat": "Loss under load"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false,
+      "showPoints": "always",
+      "pointSize": 5
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 204,
+   "type": "timeseries",
+   "title": "Receiver-side TCP: OFO / DSACK (5 min)",
+   "description": "Out-of-order segments and DSACK seen by the receiver - sign of loss/reordering on the path.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 81
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "increase(u5g_probe_tcp_ofo_queued[5m])",
+     "legendFormat": "OFO"
+    },
+    {
+     "refId": "B",
+     "expr": "increase(u5g_probe_tcp_dsack_sent[5m])",
+     "legendFormat": "DSACK"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false,
+      "showPoints": "always",
+      "pointSize": 5
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 205,
+   "type": "timeseries",
+   "title": "Ping 56 B vs 1472 B (DF)",
+   "description": "Idle RTT to nopeus.dna.fi: small packet vs full-MTU packet with Don't Fragment. Loss or a big gap on 1472 B points to MTU/path issues.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 81
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_probe_ping_rtt_avg_seconds{size=\"56\"}",
+     "legendFormat": "56 B"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_probe_ping_rtt_avg_seconds{size=\"1472\"}",
+     "legendFormat": "1472 B DF"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false,
+      "showPoints": "always",
+      "pointSize": 5
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 206,
+   "type": "timeseries",
+   "title": "Ping loss by packet size",
+   "description": "Loss of the 5-packet probe pings, per size.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 81
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_probe_ping_loss_ratio{size=\"56\"}",
+     "legendFormat": "56 B"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_probe_ping_loss_ratio{size=\"1472\"}",
+     "legendFormat": "1472 B DF"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 0,
+      "spanNulls": false,
+      "showPoints": "always",
+      "pointSize": 5
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 207,
+   "type": "row",
+   "title": "Watchdog (auto-cure)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 89
+   },
+   "panels": []
+  },
+  {
+   "id": 208,
+   "type": "stat",
+   "title": "Episode",
+   "description": "1 = last 3 probes: DNA below threshold",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 90
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_watchdog_episode_active",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "none",
+         "color": "green"
+        },
+        "1": {
+         "text": "EPISODE",
+         "color": "red"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 209,
+   "type": "stat",
+   "title": "Mode",
+   "description": "dry = diag only, live = diag + cure",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 90
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_watchdog_live_mode",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "dry-run",
+         "color": "blue"
+        },
+        "1": {
+         "text": "LIVE",
+         "color": "orange"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "blue",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 210,
+   "type": "stat",
+   "title": "Modem ssh",
+   "description": "Watchdog can reach the modem (port 2222)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 90
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_watchdog_modem_reachable",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "unreachable",
+         "color": "red"
+        },
+        "1": {
+         "text": "ok",
+         "color": "green"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 211,
+   "type": "stat",
+   "title": "Cures (total)",
+   "description": "Cures sent by the watchdog since the counter started",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 90
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_watchdog_cures_total",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 212,
+   "type": "stat",
+   "title": "Dry-run triggers",
+   "description": "Episodes detected in dry-run mode",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 90
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_watchdog_dryrun_triggers_total",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  },
+  {
+   "id": 213,
+   "type": "stat",
+   "title": "Since last cure",
+   "description": "Time since the last cure (empty if none yet)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 90
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "time() - (u5g_watchdog_last_cure_timestamp_seconds > 0)",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "auto"
+   }
+  }
+ ],
+ "id": null,
+ "annotations": {
+  "list": [
+   {
+    "builtIn": 1,
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "hide": true,
+    "iconColor": "rgba(0, 211, 255, 1)",
+    "name": "Annotations & Alerts",
+    "type": "dashboard"
+   },
+   {
+    "name": "Cure executed",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "enable": true,
+    "iconColor": "orange",
+    "expr": "changes(u5g_watchdog_cures_total[1m]) > 0",
+    "step": "60s",
+    "titleFormat": "Cure executed",
+    "textFormat": "Watchdog sent a cure"
+   },
+   {
+    "name": "Episode (dry-run)",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "enable": true,
+    "iconColor": "red",
+    "expr": "changes(u5g_watchdog_dryrun_triggers_total[1m]) > 0",
+    "step": "60s",
+    "titleFormat": "Episode detected (dry-run)",
+    "textFormat": "Watchdog would cure now"
+   },
+   {
+    "name": "Public IP change",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "enable": true,
+    "iconColor": "purple",
+    "expr": "u5g_public_ip_info unless u5g_public_ip_info offset 5m",
+    "step": "60s",
+    "titleFormat": "Public IP changed",
+    "textFormat": "{{ip}}"
+   }
+  ]
+ }
+}

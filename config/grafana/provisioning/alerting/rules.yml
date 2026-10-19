@@ -1,0 +1,306 @@
+apiVersion: 1
+groups:
+- orgId: 1
+  name: u5g
+  folder: U5G
+  interval: 1m
+  rules:
+  - uid: u5g-speed-drop
+    title: Speed drop (Speedtest below 20 Mbit/s)
+    condition: C
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    annotations:
+      summary: Latest Speedtest Tracker download is below 20 Mbit/s.
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 3900
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: max(speedtest_tracker_download_bits)
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: lt
+            params:
+            - 20000000
+  - uid: u5g-cure-executed
+    title: 'U5G: cure executed'
+    condition: C
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    annotations:
+      summary: Watchdog sent a cure (band cycle) to the modem. See agent logs and
+        data/diag/episode-*.txt.
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 700
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: increase(u5g_watchdog_cures_total[10m])
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+  - uid: u5g-cure-failed
+    title: 'U5G: cure did not help'
+    condition: C
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    annotations:
+      summary: The last cure did not restore DNA speed above the threshold. Manual
+        attention needed.
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: u5g_watchdog_last_cure_result == bool 0
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+  - uid: u5g-episode-dry
+    title: 'U5G: episode detected (dry-run)'
+    condition: C
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    annotations:
+      summary: Watchdog detected a slow-DNA episode in dry-run mode (no cure sent).
+        diag saved.
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 700
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: increase(u5g_watchdog_dryrun_triggers_total[10m])
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+  - uid: u5g-modem-unreachable
+    title: 'U5G: modem unreachable by watchdog'
+    condition: C
+    for: 10m
+    noDataState: Alerting
+    execErrState: Error
+    annotations:
+      summary: The agent cannot reach the modem on ssh (modem rebooted? dropbear on
+        2222 not running?). Auto-cure is blocked.
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 900
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: 1 - u5g_watchdog_modem_reachable
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+  - uid: u5g-probe-stale
+    title: 'U5G: probe is stale'
+    condition: C
+    for: 5m
+    noDataState: Alerting
+    execErrState: Error
+    annotations:
+      summary: probe.sh has not updated metrics for over 15 minutes (agent or node-exporter
+        problem).
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 1200
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: time() - u5g_probe_last_run_timestamp_seconds - 900
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+  - uid: u5g-watchdog-stale
+    title: 'U5G: watchdog is stale'
+    condition: C
+    for: 5m
+    noDataState: Alerting
+    execErrState: Error
+    annotations:
+      summary: watchdog.sh has not run for over 15 minutes.
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 1200
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: time() - u5g_watchdog_last_run_timestamp_seconds - 900
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0

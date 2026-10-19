@@ -1,0 +1,8 @@
+apiVersion: 1
+providers:
+  - name: u5g
+    folder: U5G
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

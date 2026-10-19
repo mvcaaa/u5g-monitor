@@ -1,0 +1,16 @@
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: telegram
+    receivers:
+      - uid: u5g-telegram
+        type: telegram
+        settings:
+          # expanded from the grafana container environment (.env)
+          bottoken: $TELEGRAM_BOT_TOKEN
+          chatid: $TELEGRAM_CHAT_ID
+        disableResolveMessage: false
+policies:
+  - orgId: 1
+    receiver: telegram
+    group_by: ['alertname']

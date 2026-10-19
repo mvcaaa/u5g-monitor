@@ -1,0 +1,6 @@
+.env
+data/*
+!data/.gitkeep
+config/prometheus/prometheus.rendered.yml
+*.key
+id_u5g*
