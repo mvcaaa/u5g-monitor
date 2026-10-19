@@ -29,7 +29,20 @@ Russian short version: [README.ru.md](README.ru.md)
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
 | `config/` | Prometheus, blackbox, Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |
+| `AGENTS.md` | rules, invariants and checklists for automated agents (**read first if you are one**) |
 | `docs/` | ARCHITECTURE, DEPLOY (agent runbook), TRUENAS, MODEM, OPERATIONS, FINDINGS, METRICS, KNOWN_GAPS, TROUBLESHOOTING |
+
+## Documentation reading order
+1. **This README** - what the system is, the safety model, the layout.
+2. **[AGENTS.md](AGENTS.md)** - mandatory if you are an automated agent: hard safety rules, invariants, pre-commit checks.
+3. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - components, data flow, and *why* it is built this way (modem is not a host for continuous work).
+4. **[docs/KNOWN_GAPS.md](docs/KNOWN_GAPS.md)** - what was never verified or is missing; read before trusting anything.
+5. **[docs/DEPLOY.md](docs/DEPLOY.md)** - step-by-step deployment with checks and done-criteria (TrueNAS SCALE: also [docs/TRUENAS.md](docs/TRUENAS.md)).
+6. **[docs/MODEM.md](docs/MODEM.md)** - the U5G itself: filesystem, SSH, the cure, why the setup does not survive a modem reboot.
+7. **[docs/OPERATIONS.md](docs/OPERATIONS.md)** - day-to-day: mode switch, manual diag/cure, episode playbook, tuning, backups.
+8. **[docs/FINDINGS.md](docs/FINDINGS.md)** and **[docs/baselines/](docs/baselines/)** - the evidence: what the slow state is and is not, good-state reference numbers.
+9. **[docs/METRICS.md](docs/METRICS.md)** - metric names and meanings (when touching dashboards or alerts).
+10. **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - when something fails.
 
 ## Quick start
 ```bash
