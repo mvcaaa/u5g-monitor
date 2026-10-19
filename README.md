@@ -45,6 +45,7 @@ Russian short version: [README.ru.md](README.ru.md)
 8. **[docs/FINDINGS.md](docs/FINDINGS.md)** and **[docs/baselines/](docs/baselines/)** - the evidence: what the slow state is and is not, good-state reference numbers.
 9. **[docs/METRICS.md](docs/METRICS.md)** - metric names and meanings (when touching dashboards or alerts).
 10. **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - when something fails.
+11. **[docs/MCP.md](docs/MCP.md)** - optional: read-only Grafana MCP so an AI assistant can query metrics, dashboards and alerts itself.
 
 ## Quick start
 ```bash
