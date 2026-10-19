@@ -40,7 +40,7 @@ Speedtest Tracker, and an `agent` container (`agent/probe-light.sh` every minute
 - **Change thresholds:** edit `.env` (`WD_*`), `docker compose up -d agent`. Explain the trade-off (sensitivity vs false positives; probes are noisy, single-stream 5 MB varies ~2x in the good state).
 - **Add a probe target:** extend `probe.sh` (new `target` label), update `docs/METRICS.md`, dashboard panels (EN and RU JSON) and, if it should count for episodes, the watchdog logic - then test with stubs (below).
 - **Edit a dashboard:** modify JSON under `config/grafana/dashboards/`, keep `${DS}`-style inputs out (use datasource uid `prometheus`), validate JSON, keep EN and RU in sync.
-- **Modem rebooted / `modem unreachable` alert:** `bash modem/install-modem.sh <ssh_user>@<U5G_IP>`, then `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> ping` must print `pong`.
+- **Modem rebooted / `modem unreachable` alert:** `bash modem/install-modem.sh <ssh_user>@<U5G_IP>`, then `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> ping` must print `pong`. Planned restart or firmware upgrade: follow docs/OPERATIONS.md "After a modem restart" (watchdog to `dry` first, profile back to `00`, check that `0D` survived, re-install the modem side, compare `diag` with the baselines).
 
 ## Before you commit (all must pass)
 ```bash
