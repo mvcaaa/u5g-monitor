@@ -11,7 +11,7 @@ THRESH=${THRESH:-8000000}   # bit/s: DNA probe below this = slow
 NEED=${NEED:-3}             # consecutive slow probes
 MININT=${MININT:-10800}     # min seconds between triggers
 MAXDAY=${MAXDAY:-4}         # max triggers per day
-WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring
+WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring (the modem cycle itself holds 0D for 120 s, see docs/KNOWN_GAPS.md)
 SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
 PROBE=${PROBE:-$D/probe.sh}
 

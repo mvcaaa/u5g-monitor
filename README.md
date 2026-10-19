@@ -19,7 +19,7 @@ Russian short version: [README.ru.md](README.ru.md)
   Switch with `echo live > data/mode` (and back with `echo dry > data/mode`); no restart needed.
 - The agent's SSH key on the modem is **restricted by a forced command**: it can only run `ping`, `diag`, `cure`.
 - Cure rate limits: min 3 h between triggers, max 4 per day. No cure if the modem is unreachable.
-- The cure depends on a **custom band profile `0D`** that must already exist on the modem (it is not part of the stock set; see docs/MODEM.md).
+- The cure depends on a **custom band profile `0D`** that must already exist on the modem (not part of the stock set; definition and `modem/create-profile-0d.sh` in docs/MODEM.md).
   If it is missing, `cure` refuses to run and changes nothing; the scripts always return the modem to profile `00`.
 - Nothing is written to the modem's flash by this repo (see docs/MODEM.md for what that implies after a modem reboot).
 

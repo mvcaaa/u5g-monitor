@@ -21,6 +21,6 @@ $SSH "grep -qF '$(cut -d' ' -f2 "$PUB")' /etc/persistent/.ssh/authorized_keys ||
 $SSH "ps w | grep -q '[-]p 2222' || dropbear -r /var/run/dropbear_ed25519_host_key -p 2222 -l br0 -D /etc/persistent/.ssh -E"
 if ! $SSH "uiwwand-chat -t 5 'AT!BAND=?'" | grep -q '^0D,'; then
   echo "WARNING: custom band profile 0D is NOT defined on this modem. 'cure' will refuse to run until it exists."
-  echo "         See docs/MODEM.md (section 'The cure') and docs/baselines/band-profiles.txt for the definition."
+  echo "         To create it (owner's decision): ssh <ssh_user>@<modem_ip> 'sh -s' < modem/create-profile-0d.sh  (see docs/MODEM.md)."
 fi
 echo "installed. test:  ssh -p 2222 -i data/id_u5g -o BatchMode=yes ${TARGET#*@} ping   (expect: pong)"

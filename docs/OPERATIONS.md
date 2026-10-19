@@ -16,7 +16,7 @@ echo dry  > data/mode    # back to safe
 SSH="ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP>"
 $SSH ping                          # pong
 $SSH diag | tee data/diag/manual-$(date +%Y%m%d-%H%M).txt     # ~1-2 min, read-only
-$SSH cure                          # starts the band cycle in the background. ONLY during an episode.
+$SSH cure                          # starts the band cycle in the background (hold 120 s + re-registration, ~3-4 min total). ONLY during an episode.
 ```
 
 ## Episode playbook

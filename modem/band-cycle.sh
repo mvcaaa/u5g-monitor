@@ -1,28 +1,28 @@
 #!/bin/sh
-# "Cure": cycle the modem band profile 00 -> 0D -> 00 to force network re-registration (~2 min, no real outage).
-# Profile 0D "No n28 Test" is a CUSTOM profile created by the owner - it does NOT exist on a stock modem.
-# It equals 00 except that NR NSA has n28 cleared (see docs/baselines/band-profiles.txt). Without 0D this script aborts and changes nothing.
-# Safety: if the script is stopped by INT/TERM/HUP after 0D was set, 00 is restored on exit (the shell runs the trap after the current
-# `sleep` ends, i.e. within $WAIT s). SIGKILL cannot be handled - verify with `AT!BAND?` if you ever kill it by hand.
-# NOTE: reconstruction of the owner's live /etc/persistent/band-cycle.sh (634 bytes); exact original timings were not captured (docs/KNOWN_GAPS.md).
-# Never run in a healthy state without a reason. Invoked by u5g-dispatch.sh as: nohup sh band-cycle.sh &
-LOG=${LOG:-/tmp/log/band-cycle.log}   # /tmp/log is a persistent ext4 partition on the U5G
-WAIT=${CYCLE_WAIT:-20}
-mkdir -p "$(dirname "$LOG")"
-AT() { uiwwand-chat -t 10 "$1" 2>&1; }
-log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
-
-if ! AT 'AT!BAND=?' | grep -q '^0D,'; then
-  log "ABORT: custom profile 0D is not defined on this modem - nothing changed"
+# Manual: cycle band profile 00 -> 0D -> 00 to force network reselection.
+# Usage: nohup sh /etc/persistent/band-cycle.sh [wait_sec] >/dev/null 2>&1 &
+# This is the owner's live script (captured 2026-10-19) plus ONE addition: the guard below that aborts when the custom
+# profile 0D is not defined on the modem (see docs/MODEM.md and modem/create-profile-0d.sh).
+# Timeline: 0D is set immediately, held for wait_sec (default 120 s), then 00 is set by the EXIT trap -> one cycle takes >= 2 minutes,
+# plus re-registration time on 00. The EXIT trap also restores 00 if the script is interrupted by HUP/INT/TERM.
+W=${1:-120}
+LOG=${LOG:-/tmp/band-cycle.log}
+say() { echo "$(date '+%F %T') $*" >> "$LOG"; }
+if ! uiwwand-chat -t 5 'AT!BAND=?' 2>&1 | grep -q '^0D,'; then
+  say "ABORT: custom profile 0D is not defined on this modem - nothing changed"
   exit 3
 fi
-restore() { AT 'AT!BAND=00' >> "$LOG" 2>&1; log "restored profile 00 (exit trap)"; }
-trap restore EXIT
-trap 'exit 1' INT TERM HUP   # a signal ends the script; the EXIT trap then restores 00
-log "start; profile before: $(AT 'AT!BAND?' | head -1 | tr '\n' ' ')"
-AT 'AT!BAND=0D' >> "$LOG" 2>&1
-sleep "$WAIT"
-AT 'AT!BAND=00' >> "$LOG" 2>&1
-trap - EXIT INT TERM HUP   # normal path: 00 is already set
-sleep 5
-log "done; profile now: $(AT 'AT!BAND?' | head -1 | tr '\n' ' ')"
+finish() {
+  trap - EXIT
+  say "set 00 (All bands)"
+  uiwwand-chat -t 10 'AT!BAND=00' >> "$LOG" 2>&1
+  uiwwand-chat -t 5 'AT!BAND?' 2>&1 | head -3 >> "$LOG"
+  say "done"
+}
+trap 'exit 1' HUP INT TERM
+trap finish EXIT
+say "start, current:"
+uiwwand-chat -t 5 'AT!BAND?' 2>&1 | head -3 >> "$LOG"
+say "set 0D (No n28 Test), wait ${W}s"
+uiwwand-chat -t 10 'AT!BAND=0D' >> "$LOG" 2>&1
+sleep "$W"

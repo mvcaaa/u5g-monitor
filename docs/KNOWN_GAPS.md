@@ -1,17 +1,17 @@
 # Known gaps and unverified items (read before trusting the repo blindly)
 
 ## Not captured from the live system (could not be read from the authoring environment)
-0. **How the custom band profile `0D` ("No n28 Test") was created.** Only its resulting masks are known (docs/baselines/band-profiles.txt). The `AT!BAND=<index>,<name>,<masks…>`
-   creation syntax for this 5G modem was not recorded and is unverified, so the repo ships **no** script that creates the profile (writing a wrong band table to a modem
-   is not worth guessing). To rebuild: reproduce the masks above with the vendor's AT reference / the owner's notes. Until then `cure` only works on a modem that already has `0D`.
 1. **json_exporter job `u5g_ca`** (carrier-aggregation data from the UniFi API via JSONPath → `u5g_ca_lte_present{primary,band}` etc.).
    Its config contained an API key and was never copied here. Consequence: dashboard panel 106 ("carriers", both dashboards) shows no data,
    and the commented job in `config/prometheus/prometheus.yml` is a placeholder. Rebuild from the UniFi controller's device API if the panel is wanted.
-2. **`modem/band-cycle.sh` is a reconstruction.** The live `/etc/persistent/band-cycle.sh` (634 bytes, hand-written with `vi`) does the same
-   `AT!BAND=0D` → `AT!BAND=00` sequence but its exact delays/logging were not captured. `install-modem.sh` never overwrites an existing live copy.
 3. **unpoller settings** are reconstructed from the project summary (API-key auth, Prometheus on :9130, InfluxDB disabled). Tag is `latest`; pin it.
 4. The **"Speed drop" alert** (< 20 Mbit/s, `for 10m`) was created by hand in the live Grafana; its provisioned twin here (`u5g-speed-drop`) is rebuilt from that description.
 5. Russian dashboard: row/panel titles still say "каждые 7 мин" - wrong, Speedtest Tracker runs **hourly** (`7 * * * *`).
+
+## Timing caveats
+- A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
+  A "cure did not help" result right after a cure may be a false negative - check the dashboard a few minutes later before concluding. Not changed yet (owner decision: keep waiting times as they are).
+- Whether a shorter hold (< 120 s) also cures is untested.
 
 ## Never executed end-to-end in the authoring environment (no Docker daemon there)
 - `docker compose up`, image pulls (tags `prom/prometheus:v3.5.0`, `grafana/grafana:12.1.0`, `prom/node-exporter:v1.9.1` are unverified - `docker compose pull` fails loudly if one is wrong; `blackbox-exporter:v0.29.0` was used live),

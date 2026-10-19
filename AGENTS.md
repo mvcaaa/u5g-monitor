@@ -12,8 +12,8 @@ Speedtest Tracker, and an `agent` container (`agent/probe.sh` every 5 min, `agen
 ## Safety rules (non-negotiable)
 1. **Never set `data/mode` to `live`** and never run `cure` unless the owner explicitly approved it in the current conversation. Default and fallback is `dry`.
 2. **Never run `cure` (or `AT!BAND=…`) outside a confirmed slow episode.** It briefly re-registers the modem; healthy-state runs only add risk.
-3. **Band profile `0D` is custom and irreplaceable-by-script:** never delete, redefine or overwrite band profiles (`AT!BAND=<idx>,<name>,…`), never run `AT!BAND=…` other than the cure's `0D`/`00`, and after any manual
-   experiment make sure `AT!BAND?` shows `00`. If `diag` shows no `0D`, report it - do not try to create it.
+3. **Band profile `0D` is custom:** never delete, redefine or overwrite band profiles, never run `AT!BAND=…` other than the cure's `0D`/`00`, and after any manual experiment make sure
+   `AT!BAND?` shows `00`. If `diag` shows no `0D`, report it. `modem/create-profile-0d.sh` (verified syntax, refuses to overwrite) may be run **only on the owner's explicit request**.
 4. **Never write the modem's flash** (`cfg_save_check`, `cfgmtd -w`, firmware tools) and never overwrite an existing `/etc/persistent/band-cycle.sh` on the modem.
    `modem/install-modem.sh` is the only sanctioned way to touch the modem; it writes to the RAM overlay only.
 5. **Secrets never enter chat, logs, commits or issues:** `.env` (Telegram token, UniFi API key, Grafana password), `data/id_u5g` (watchdog private key),
