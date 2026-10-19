@@ -8,7 +8,7 @@ Russian short version: [README.ru.md](README.ru.md)
 
 ## What it does
 - Collects U5G radio/WAN metrics (unpoller), hourly speed tests (Speedtest Tracker), ICMP path metrics (blackbox).
-- Every 5 min the **agent** downloads 5 MB from DNA's server (`nopeus.dna.fi`) and Cloudflare, measuring speed, RTT under
+- Every minute a **light probe** downloads 1 MB from DNA (judged by time; earlier detection, shadow mode by default). Every 5 min the **agent** downloads 5 MB from DNA's server (`nopeus.dna.fi`) and Cloudflare, measuring speed, RTT under
   load, big-packet (1472 B, DF) ping, receiver-side TCP out-of-order/DSACK counters, public IP.
 - The **watchdog** declares an *episode* when the DNA probe is < 8 Mbit/s for 3 consecutive probes, then runs a read-only
   diagnostic bundle on the modem (`diag`) and - only in `live` mode - the cure (`cure`), re-measures, and records the result.

@@ -58,6 +58,10 @@ slow state ~6 s or timeout). Three consecutive samples >= 2 s (HTTP 200) = a lig
 - `echo off > data/light_mode`: ignore the light probe.
 The light probe cannot see mild episodes (about 5-14 Mbit/s): 1 MB then takes < 1.6 s, like the good state. The 5-minute 5 MB probe stays as the second level.
 
+## Updating dashboards/alerts in an existing (non-provisioned) Grafana
+`python3 scripts/import-dashboard-api.py config/grafana/dashboards/u5g-radio-monitor-en.json` (overwrites by uid, asks for the admin password) and `python3 scripts/setup-alerts-api.py` (creates only the missing rules).
+The stack's own Grafana picks both up from `config/grafana/` on restart.
+
 ## Backups
 `data/` (key, mode, state, diag, logs) and the named volumes `prometheus-data`, `grafana-data`, `speedtest-config`
 (`docker run --rm -v u5g_prometheus-data:/v -v $PWD:/b alpine tar czf /b/prom.tgz -C /v .`). Config is in git. Never commit `.env` or `data/`.

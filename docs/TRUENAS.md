@@ -37,9 +37,11 @@ Useful to know when you find it on the box; this repo supersedes it.
 | unpoller, blackbox (v0.29.0, `icmp` module), json_exporter | UI apps | 9130, 9115, 7979 |
 | node-exporter with textfile collector | UI app, textfile dir mounted from `/mnt/Main/u5g-watchdog/textfile` | 30910 |
 | `probe.sh` | `/mnt/Main/u5g-watchdog/probe.sh`, TrueNAS cron job id 1, every 5 min | |
-| `watchdog.sh` + state | `/mnt/Main/u5g-watchdog/`, cron job id 2 (`2-59/5 * * * *`), mode file `/mnt/Main/u5g-watchdog/mode` | |
+| `probe-light.sh` | `/mnt/Main/u5g-watchdog/probe-light.sh`, cron job every minute (added 2026-10-19, shadow mode, `light_mode` file) | |
+| `watchdog.sh` + state | `/mnt/Main/u5g-watchdog/`, cron job id 2 (now `* * * * *`, was `2-59/5`), mode files `mode` and `light_mode`; the old v1 copy is kept as `watchdog.sh.v1` | |
 | watchdog SSH key | `/mnt/Main/u5g-watchdog/id_u5g` | |
 Cron on TrueNAS must be created via UI or `midclt call cronjob.create '{...}'` (not `crontab -e`). In layout B the scripts used
 `D=/mnt/Main/u5g-watchdog`; in this repo they use `/data` inside the agent container (same file layout).
-**Migrating B → A:** copy `id_u5g*` and `mode` into `data/`, stop cron jobs 1 and 2 (`midclt call cronjob.update <id> '{"enabled":false}'`),
+**Installing/updating layout B from this repo:** `sudo MODEM_HOST=<ip> MODEM_USER=<user> bash scripts/truenas-layout-b-install.sh` (idempotent; copies `agent/*.sh` to `/mnt/Main/u5g-watchdog`, creates/updates the three cron jobs, starts in `dry` + `shadow`).
+**Migrating B → A:** copy `id_u5g*` and `mode` into `data/`, stop all the cron jobs (probe, light probe, watchdog; `midclt call cronjob.update <id> '{"enabled":false}'`),
 then deploy A. Otherwise both would probe and could both trigger a cure.

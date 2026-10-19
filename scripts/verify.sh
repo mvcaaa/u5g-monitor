@@ -15,7 +15,7 @@ for j in prometheus unpoller speedtest_tracker blackbox_icmp node_textfile; do
   [ "$n" -ge 1 ] && ok "prometheus target job=$j up ($n)" || bad "prometheus target job=$j not up (see docs/TROUBLESHOOTING.md)"
 done
 q() { curl -s "$P/api/v1/query" --data-urlencode "query=$1" | grep -c '"result":\[{'; }
-for m in u5g_probe_download_bits_per_second u5g_watchdog_modem_reachable u5g_watchdog_live_mode; do
+for m in u5g_probe_download_bits_per_second u5g_probe_light_time_seconds u5g_watchdog_modem_reachable u5g_watchdog_live_mode; do
   [ "$(q $m)" = 1 ] && ok "metric $m present" || bad "metric $m missing (agent needs ~2-3 min after start)"
 done
 [ "$(q 'u5g_watchdog_modem_reachable == 1')" = 1 ] && ok "watchdog reaches the modem" || bad "modem not reachable by the agent (run modem/install-modem.sh)"

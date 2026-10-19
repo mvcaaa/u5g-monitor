@@ -176,6 +176,49 @@ groups:
             type: gt
             params:
             - 0
+  - uid: u5g-light-episode
+    title: 'U5G: light episode detected'
+    condition: C
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    annotations:
+      summary: The light probe (1 MB every minute) took 2 s or more three times in a row
+        (shadow mode is informational only, it triggers no diag or cure).
+    labels:
+      project: u5g
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 700
+        to: 0
+      datasourceUid: prometheus
+      model:
+        refId: A
+        expr: increase(u5g_watchdog_light_detections_total[10m])
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
   - uid: u5g-modem-unreachable
     title: 'U5G: modem unreachable by watchdog'
     condition: C

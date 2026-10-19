@@ -30,8 +30,11 @@
 7. **Provisioned, not clicked.** Grafana datasource (uid `prometheus`), dashboards, alert rules and the Telegram contact
    point are files; dashboards use the fixed datasource uid instead of an import-time input.
 
-## Data flow of one watchdog cycle (every 5 min)
-`probe.sh` (t+0) → `/data/textfile/u5g_probe.prom` → watchdog (t+120 s) appends a sample to `/data/state/history.log`,
-evaluates the last 3 samples → if episode and rate limits allow and modem answers `ping`: run `diag` (saved to
+## Data flow (agent loop, period 60 s)
+Every cycle: `probe-light.sh` (1 MB from DNA, judged by download time) → `/data/textfile/u5g_probe_light.prom` + `/data/state/light.log`.
+Every 5th cycle: `probe.sh` (5 MB from DNA and Cloudflare, pings, TCP counters) → `/data/textfile/u5g_probe.prom`.
+Every cycle: the watchdog appends a heavy sample to `/data/state/history.log` when a new one exists and evaluates both detectors:
+heavy = last 3 samples < 8 Mbit/s; light = last 3 light samples >= 2 s (HTTP 200 each). The light detector only logs/counts in `shadow` mode (`/data/light_mode`)
+and triggers like the heavy one in `primary` mode. On an episode, if rate limits allow and the modem answers `ping`: run `diag` (saved to
 `/data/diag/episode-*.txt`) → dry: log "would cure"; live: `cure`, wait 170 s, re-probe, record result → write
 `/data/textfile/u5g_watchdog.prom` (see METRICS.md).
