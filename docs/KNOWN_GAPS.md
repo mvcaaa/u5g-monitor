@@ -1,11 +1,13 @@
 # Known gaps and unverified items (read before trusting the repo blindly)
 
 ## Not captured from the live system (could not be read from the authoring environment)
-1. **json_exporter job `u5g_ca`** (carrier-aggregation data from the UniFi API via JSONPath → `u5g_ca_lte_present{primary,band}` etc.).
-   Its config contained an API key and was never copied here. Consequence: dashboard panel 106 ("carriers", both dashboards) shows no data,
-   and the commented job in `config/prometheus/prometheus.yml` is a placeholder. Rebuild from the UniFi controller's device API if the panel is wanted.
-2. **unpoller settings** are reconstructed from the project summary (API-key auth, Prometheus on :9130, InfluxDB disabled). Tag is `latest`; pin it.
-3. The **"Speed drop" alert** (< 20 Mbit/s, `for 10m`) was created by hand in the live Grafana; its provisioned twin here (`u5g-speed-drop`) is rebuilt from that description.
+1. **unpoller settings** are reconstructed from the project summary (API-key auth, Prometheus on :9130, InfluxDB disabled). Tag is `latest`; pin it.
+2. The **"Speed drop" alert** (< 20 Mbit/s, `for 10m`) was created by hand in the live Grafana; its provisioned twin here (`u5g-speed-drop`) is rebuilt from that description.
+
+## json_exporter in the compose stack
+`config/json_exporter/json_exporter.yml` equals the live TrueNAS config byte for byte once the key is filled in. The compose services `json-exporter` and
+`prometheus`, run against a stub controller serving a captured `stat/device` response, produced the same 10 `u5g_*` series as the live exporter.
+Not run: the compose `json-exporter` against the real controller (TLS, API key accepted).
 
 ## Light probe calibration
 The threshold (`LIGHT_SLOW_SEC=2`) is calibrated from 20 good-state samples only; the slow-state value (~6 s at 1.4 Mbit/s) is computed from the 5 MB probe, not measured with 1 MB. The shadow mode exists to confirm this on the next episode and to count false detections.

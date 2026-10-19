@@ -7,7 +7,7 @@ cycling the modem band profile. Docker Compose stack; runs on any Docker host (a
 Russian short version: [README.ru.md](README.ru.md)
 
 ## What it does
-- Collects U5G radio/WAN metrics (unpoller), hourly speed tests (Speedtest Tracker), ICMP path metrics (blackbox).
+- Collects U5G radio/WAN metrics (unpoller), carrier aggregation (json_exporter), hourly speed tests (Speedtest Tracker), ICMP path metrics (blackbox).
 - Every minute a **light probe** downloads 1 MB from DNA (judged by time; earlier detection, shadow mode by default). Every 5 min the **agent** downloads 5 MB from DNA's server (`nopeus.dna.fi`) and Cloudflare, measuring speed, RTT under
   load, big-packet (1472 B, DF) ping, receiver-side TCP out-of-order/DSACK counters, public IP.
 - The **watchdog** declares an *episode* when the DNA probe is < 8 Mbit/s for 3 consecutive probes, then runs a read-only
@@ -26,10 +26,10 @@ Russian short version: [README.ru.md](README.ru.md)
 ## Layout
 | Path | Purpose |
 |---|---|
-| `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, speedtest-tracker, agent |
+| `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, json-exporter, speedtest-tracker, agent |
 | `agent/probe.sh`, `agent/watchdog.sh`, `agent/entrypoint.sh` | probes and watchdog (run inside the `agent` container) |
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
-| `config/` | Prometheus, blackbox, Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
+| `config/` | Prometheus, blackbox, json_exporter (template, key rendered by `scripts/init.sh`), Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |
 | `AGENTS.md` | rules, invariants and checklists for automated agents (**read first if you are one**) |
 | `docs/` | ARCHITECTURE, DEPLOY (agent runbook), TRUENAS, MODEM, OPERATIONS, FINDINGS, METRICS, KNOWN_GAPS, TROUBLESHOOTING, `episodes/` (recorded episodes) |

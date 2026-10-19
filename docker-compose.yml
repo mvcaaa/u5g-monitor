@@ -67,6 +67,14 @@ services:
       UP_PROMETHEUS_HTTP_LISTEN: 0.0.0.0:9130
       UP_INFLUXDB_DISABLE: "true"
 
+  # carrier-aggregation data (u5g_ca_*) from the UniFi controller API; config rendered by scripts/init.sh (contains the API key)
+  json-exporter:
+    <<: *restart
+    image: quay.io/prometheuscommunity/json-exporter:v0.8.0
+    command: ["--config.file=/config/json_exporter.yml"]
+    volumes:
+      - ./config/json_exporter/json_exporter.rendered.yml:/config/json_exporter.yml:ro
+
   speedtest-tracker:
     <<: *restart
     image: lscr.io/linuxserver/speedtest-tracker:latest

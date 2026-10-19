@@ -19,7 +19,12 @@
 ## Other sources
 `speedtest_tracker_download_bits`, `speedtest_tracker_upload_bits`, `speedtest_tracker_*_ms` (labels incl. `scheduled`,
 so always aggregate with `max(...)`); `probe_success`, `probe_icmp_duration_seconds{phase="rtt"}` (blackbox);
-`unpoller_*` (UniFi). `u5g_ca_*` come from a json_exporter job that is NOT part of this repo (KNOWN_GAPS.md).
+`unpoller_*` (UniFi).
+
+## From json_exporter (job `u5g_ca`, every minute, UniFi controller `stat/device`, the U5G entry `model=="UMBBE631"`)
+`u5g_ca_lte_present{band,earfcn,primary}`, `u5g_ca_lte_dl_bw_mhz`, `u5g_ca_lte_ul_bw_mhz`; `u5g_ca_nr_present{band,dl_arfcn,primary}`, `u5g_ca_nr_dl_bw_mhz`,
+`u5g_ca_nr_ul_bw_mhz` (one series per component carrier currently in aggregation; `primary="false"` = secondary carrier);
+`u5g_last_seen_timestamp_seconds` (when the controller last heard from the U5G - data freshness). Config: `config/json_exporter/json_exporter.yml`.
 
 ## Written by `agent/probe-light.sh` (`data/textfile/u5g_probe_light.prom`, every minute)
 `u5g_probe_light_last_run_timestamp_seconds`, `_http_code`, `_bytes`, `_time_seconds` (total time of the 1 MB download from DNA - the quantity that is judged),

@@ -2,6 +2,7 @@
 data/*
 !data/.gitkeep
 config/prometheus/prometheus.rendered.yml
+config/json_exporter/json_exporter.rendered.yml
 *.key
 id_u5g*
 CLAUDE.local.md

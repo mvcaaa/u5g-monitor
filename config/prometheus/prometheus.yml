@@ -40,5 +40,17 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
 
-  # NOT captured in this repo (see docs/KNOWN_GAPS.md): job u5g_ca (json_exporter reading carrier-aggregation
-  # data from the UniFi API; the dashboard panel 106 and u5g_ca_* metrics depend on it).
+  # Carrier aggregation of the U5G (u5g_ca_*, u5g_last_seen_timestamp_seconds) via json_exporter from the UniFi controller API
+  - job_name: u5g_ca
+    metrics_path: /probe
+    params:
+      module: [u5g]
+    static_configs:
+      - targets: ['__UNIFI_URL__/proxy/network/api/s/default/stat/device']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: json-exporter:7979

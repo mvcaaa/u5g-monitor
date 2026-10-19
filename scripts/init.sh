@@ -21,5 +21,13 @@ if [ ! -f data/id_u5g ]; then
   echo "generated data/id_u5g (watchdog key)"
 fi
 chmod 600 data/id_u5g
-sed "s/__U5G_IP__/${U5G_IP:?U5G_IP missing in .env}/" config/prometheus/prometheus.yml > config/prometheus/prometheus.rendered.yml
+UNIFI_URL=$(get UNIFI_URL)
+sed -e "s/__U5G_IP__/${U5G_IP:?U5G_IP missing in .env}/" -e "s|__UNIFI_URL__|${UNIFI_URL:?UNIFI_URL missing in .env}|" \
+  config/prometheus/prometheus.yml > config/prometheus/prometheus.rendered.yml
+# json_exporter reads the UniFi API key from its config file only; awk keeps any characters of the key literal.
+# 644: the container runs as nobody and must read it.
+K="$(get UNIFI_API_KEY)" awk '/__UNIFI_API_KEY__/{sub(/__UNIFI_API_KEY__.*/,""); print $0 ENVIRON["K"]; next} 1' \
+  config/json_exporter/json_exporter.yml > config/json_exporter/json_exporter.rendered.yml
+chmod 644 config/json_exporter/json_exporter.rendered.yml
+[ -n "$(get UNIFI_API_KEY)" ] || echo "WARNING: UNIFI_API_KEY is empty in .env - json-exporter (u5g_ca_*) and unpoller will fail"
 echo "ok. next: install the key on the modem (modem/install-modem.sh), then: docker compose up -d --build"

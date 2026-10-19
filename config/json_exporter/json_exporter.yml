@@ -1,0 +1,35 @@
+modules:
+  u5g:
+    headers:
+      X-API-KEY: __UNIFI_API_KEY__
+    http_client_config:
+      tls_config:
+        insecure_skip_verify: true
+    metrics:
+      - name: u5g_last_seen_timestamp_seconds
+        path: '{.data[?(@.model=="UMBBE631")].last_seen}'
+        help: Controller last_seen of the U5G device (data freshness)
+      - name: u5g_ca_lte
+        type: object
+        path: '{.data[?(@.model=="UMBBE631")].mbb.radio.ca_lte[*]}'
+        help: LTE component carriers in aggregation
+        labels:
+          band: '{.band}'
+          earfcn: '{.dl_earfcn}'
+          primary: '{.primary}'
+        values:
+          present: 1
+          dl_bw_mhz: '{.dl_bw_mhz}'
+          ul_bw_mhz: '{.ul_bw_mhz}'
+      - name: u5g_ca_nr
+        type: object
+        path: '{.data[?(@.model=="UMBBE631")].mbb.radio.ca_nr[*]}'
+        help: NR component carriers in aggregation
+        labels:
+          band: '{.band}'
+          dl_arfcn: '{.dl_arfcn}'
+          primary: '{.primary}'
+        values:
+          present: 1
+          dl_bw_mhz: '{.dl_bw_mhz}'
+          ul_bw_mhz: '{.ul_bw_mhz}'

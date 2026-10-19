@@ -6,7 +6,7 @@ You are expected to deploy, operate or modify this stack **without prior context
 ## What this is (30 seconds)
 A Docker Compose stack that monitors a UniFi 5G Max Outdoor (U5G) modem on a Finnish mobile network, detects "slow episodes" (download speed to the
 operator's own server collapses from ~60-200 to ~1-14 Mbit/s while radio KPIs look fine), collects diagnostics, and can **cure** an episode by cycling the
-modem's band profile through a restricted SSH key. Components: Prometheus, Grafana (provisioned), blackbox, node-exporter (textfile only), unpoller,
+modem's band profile through a restricted SSH key. Components: Prometheus, Grafana (provisioned), blackbox, node-exporter (textfile only), unpoller, json-exporter (carrier aggregation),
 Speedtest Tracker, and an `agent` container (`agent/probe-light.sh` every minute, `agent/probe.sh` every 5 min, `agent/watchdog.sh` every minute).
 
 ## Safety rules (non-negotiable)

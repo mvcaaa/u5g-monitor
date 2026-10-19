@@ -34,7 +34,7 @@ Useful to know when you find it on the box; this repo supersedes it.
 | Prometheus (container `ix-prometheus-prometheus-1`) | UI app; config `/mnt/.ix-apps/app_mounts/prometheus/config/prometheus.yml`; restart: `sudo docker restart ix-prometheus-prometheus-1` | 30104 |
 | Grafana | UI app | 30037 |
 | Speedtest Tracker | UI app, `SPEEDTEST_SCHEDULE=7 * * * *`, servers 14164,22669,14928 | 30220 |
-| unpoller, blackbox (v0.29.0, `icmp` module), json_exporter | UI apps | 9130, 9115, 7979 |
+| unpoller, blackbox (v0.29.0, `icmp` module), json_exporter (v0.8.0, config = `config/json_exporter/json_exporter.yml` with the key filled in) | UI apps | 9130, 9115, 7979 |
 | node-exporter with textfile collector | UI app, textfile dir mounted from `/mnt/Main/u5g-watchdog/textfile` | 30910 |
 | `probe.sh` | `/mnt/Main/u5g-watchdog/probe.sh`, TrueNAS cron job id 1, every 5 min | |
 | `probe-light.sh` | `/mnt/Main/u5g-watchdog/probe-light.sh`, cron job every minute (added 2026-10-19, shadow mode, `light_mode` file) | |
