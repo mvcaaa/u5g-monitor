@@ -32,7 +32,7 @@ Russian short version: [README.ru.md](README.ru.md)
 | `config/` | Prometheus, blackbox, Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |
 | `AGENTS.md` | rules, invariants and checklists for automated agents (**read first if you are one**) |
-| `docs/` | ARCHITECTURE, DEPLOY (agent runbook), TRUENAS, MODEM, OPERATIONS, FINDINGS, METRICS, KNOWN_GAPS, TROUBLESHOOTING |
+| `docs/` | ARCHITECTURE, DEPLOY (agent runbook), TRUENAS, MODEM, OPERATIONS, FINDINGS, METRICS, KNOWN_GAPS, TROUBLESHOOTING, `episodes/` (recorded episodes) |
 
 ## Documentation reading order
 1. **This README** - what the system is, the safety model, the layout.
