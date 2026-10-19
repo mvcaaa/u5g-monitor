@@ -106,6 +106,9 @@ services:
       NEED: ${WD_NEED:-3}
       MININT: ${WD_MIN_INTERVAL:-10800}
       MAXDAY: ${WD_MAX_PER_DAY:-4}
+      LNEED: ${LIGHT_NEED:-3}
+      LSLOW: ${LIGHT_SLOW_SEC:-2}
+      LIGHT_SIZE: ${LIGHT_SIZE:-1000000}
     volumes:
       - ./agent:/app:ro
       - ./data:/data

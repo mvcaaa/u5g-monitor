@@ -7,6 +7,9 @@
 2. **unpoller settings** are reconstructed from the project summary (API-key auth, Prometheus on :9130, InfluxDB disabled). Tag is `latest`; pin it.
 3. The **"Speed drop" alert** (< 20 Mbit/s, `for 10m`) was created by hand in the live Grafana; its provisioned twin here (`u5g-speed-drop`) is rebuilt from that description.
 
+## Light probe calibration
+The threshold (`LIGHT_SLOW_SEC=2`) is calibrated from 20 good-state samples only; the slow-state value (~6 s at 1.4 Mbit/s) is computed from the 5 MB probe, not measured with 1 MB. The shadow mode exists to confirm this on the next episode and to count false detections.
+
 ## Timing caveats
 - A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
   A "cure did not help" result right after a cure may be a false negative - check the dashboard a few minutes later before concluding. Not changed yet (owner decision: keep waiting times as they are). Data point from episode 1: the first good probe came 90 s after `00` was restored (the re-measure at 170 s would have run ~49 s after `00` - untested whether that is already enough).

@@ -20,8 +20,9 @@ Speedtest Tracker, and an `agent` container (`agent/probe.sh` every 5 min, `agen
    Speedtest `APP_KEY`. Do not echo them, do not `cat .env`, redact when quoting config. Both `.env` and `data/` are git-ignored - keep it that way.
 6. **No destructive operations without approval:** `docker compose down -v`, deleting volumes, `rm -rf data/`, `git push --force`, deleting Grafana rules/dashboards.
 7. The agent's modem key is restricted to `ping | diag | cure` by a forced command. Do not widen it, do not add other keys, do not enable password-less root elsewhere.
-8. Do not add active measurements that push large traffic: the unlimited plan is capped, probes are 5 MB per target per 5 min by design.
+8. Do not add active measurements that push large traffic: the unlimited plan is capped, probes are 5 MB per target per 5 min plus a 1 MB light probe per minute by design (about 4.3 GB/day together). Do not add more or raise sizes/rates without the owner's approval.
 9. Report honestly. If a check was not run, say so; do not describe the stack as "working" from syntax checks alone (see docs/KNOWN_GAPS.md for what was never run end to end).
+10. **`data/light_mode` stays `shadow`** (light probe only logs/measures) unless the owner explicitly approves `primary` after a clean shadow run; `primary` makes the light probe trigger diag and, in live mode, the cure.
 
 ## Repository map and invariants
 | Area | Invariant |

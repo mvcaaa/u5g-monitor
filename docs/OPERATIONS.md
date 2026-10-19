@@ -49,6 +49,15 @@ Nothing is written to flash by design. Expect the alert "modem unreachable" afte
 6. Only then `echo live > data/mode` (if it was live), and confirm the alert "modem unreachable" cleared and `u5g_watchdog_modem_reachable 1` is exported.
 7. Note the reboot time: it may have cured an episode by itself (re-registration), which matters for the case with DNA. Mark it on the dashboard or in `watchdog.log`.
 
+## Light probe (earlier detection)
+Every minute `agent/probe-light.sh` downloads 1 MB from DNA and judges it by **time** (good state 0.3-0.8 s, calibration in `docs/baselines/light-probe-calibration-2026-10-19.md`;
+slow state ~6 s or timeout). Three consecutive samples >= 2 s (HTTP 200) = a light episode, detected about 3 minutes after onset instead of ~10-15 with the 5-minute 5 MB probe.
+- `cat data/light_mode`: `shadow` (default) = only logs "LIGHT episode detected [shadow]" and sets `u5g_watchdog_light_*` metrics; nothing is triggered by it.
+  Compare the timestamps with the later "EPISODE:" line of the heavy probe in `data/watchdog.log` to see how much earlier it was, and watch for false detections in good periods.
+- `echo primary > data/light_mode`: a light episode triggers diag (and the cure in live mode) like the heavy one, with the same interval/day limits. Do this only after the shadow run is clean.
+- `echo off > data/light_mode`: ignore the light probe.
+The light probe cannot see mild episodes (about 5-14 Mbit/s): 1 MB then takes < 1.6 s, like the good state. The 5-minute 5 MB probe stays as the second level.
+
 ## Backups
 `data/` (key, mode, state, diag, logs) and the named volumes `prometheus-data`, `grafana-data`, `speedtest-config`
 (`docker run --rm -v u5g_prometheus-data:/v -v $PWD:/b alpine tar czf /b/prom.tgz -C /v .`). Config is in git. Never commit `.env` or `data/`.
