@@ -10,6 +10,7 @@ case "$CMD" in
     ;;
   diag)
     echo "### diag $(date '+%F %T') uptime: $(cut -d' ' -f1 /proc/uptime)s"
+    echo "### BAND profile (current / defined)"; AT 'AT!BAND?' | head -1; AT 'AT!BAND=?' | sed '/^Available:/,$d' | grep -E '^[0-9A-F]{2},'
     echo "### GSTATUS"; AT 'AT!GSTATUS?'
     C0=$(cnt)
     echo "### ping nopeus.dna.fi 56B"; ping -c 5 -W 2 -q nopeus.dna.fi 2>&1 | tail -2
@@ -28,6 +29,9 @@ case "$CMD" in
     echo "### done"
     ;;
   cure)
+    if ! AT 'AT!BAND=?' | grep -q '^0D,'; then
+      echo "custom band profile 0D is not defined on this modem; cure refused" >&2; exit 3
+    fi
     if [ -f /etc/persistent/band-cycle.sh ]; then
       nohup sh /etc/persistent/band-cycle.sh >/dev/null 2>&1 &
       echo "cure started $(date '+%F %T')"

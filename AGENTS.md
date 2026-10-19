@@ -12,14 +12,16 @@ Speedtest Tracker, and an `agent` container (`agent/probe.sh` every 5 min, `agen
 ## Safety rules (non-negotiable)
 1. **Never set `data/mode` to `live`** and never run `cure` unless the owner explicitly approved it in the current conversation. Default and fallback is `dry`.
 2. **Never run `cure` (or `AT!BAND=…`) outside a confirmed slow episode.** It briefly re-registers the modem; healthy-state runs only add risk.
-3. **Never write the modem's flash** (`cfg_save_check`, `cfgmtd -w`, firmware tools) and never overwrite an existing `/etc/persistent/band-cycle.sh` on the modem.
+3. **Band profile `0D` is custom and irreplaceable-by-script:** never delete, redefine or overwrite band profiles (`AT!BAND=<idx>,<name>,…`), never run `AT!BAND=…` other than the cure's `0D`/`00`, and after any manual
+   experiment make sure `AT!BAND?` shows `00`. If `diag` shows no `0D`, report it - do not try to create it.
+4. **Never write the modem's flash** (`cfg_save_check`, `cfgmtd -w`, firmware tools) and never overwrite an existing `/etc/persistent/band-cycle.sh` on the modem.
    `modem/install-modem.sh` is the only sanctioned way to touch the modem; it writes to the RAM overlay only.
-4. **Secrets never enter chat, logs, commits or issues:** `.env` (Telegram token, UniFi API key, Grafana password), `data/id_u5g` (watchdog private key),
+5. **Secrets never enter chat, logs, commits or issues:** `.env` (Telegram token, UniFi API key, Grafana password), `data/id_u5g` (watchdog private key),
    Speedtest `APP_KEY`. Do not echo them, do not `cat .env`, redact when quoting config. Both `.env` and `data/` are git-ignored - keep it that way.
-5. **No destructive operations without approval:** `docker compose down -v`, deleting volumes, `rm -rf data/`, `git push --force`, deleting Grafana rules/dashboards.
-6. The agent's modem key is restricted to `ping | diag | cure` by a forced command. Do not widen it, do not add other keys, do not enable password-less root elsewhere.
-7. Do not add active measurements that push large traffic: the unlimited plan is capped, probes are 5 MB per target per 5 min by design.
-8. Report honestly. If a check was not run, say so; do not describe the stack as "working" from syntax checks alone (see docs/KNOWN_GAPS.md for what was never run end to end).
+6. **No destructive operations without approval:** `docker compose down -v`, deleting volumes, `rm -rf data/`, `git push --force`, deleting Grafana rules/dashboards.
+7. The agent's modem key is restricted to `ping | diag | cure` by a forced command. Do not widen it, do not add other keys, do not enable password-less root elsewhere.
+8. Do not add active measurements that push large traffic: the unlimited plan is capped, probes are 5 MB per target per 5 min by design.
+9. Report honestly. If a check was not run, say so; do not describe the stack as "working" from syntax checks alone (see docs/KNOWN_GAPS.md for what was never run end to end).
 
 ## Repository map and invariants
 | Area | Invariant |

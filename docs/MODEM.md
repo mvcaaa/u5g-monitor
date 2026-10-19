@@ -28,11 +28,25 @@ Mechanism found in `/usr/bin/syswrapper.sh`: `touch /var/run/need_cfg_save; /usr
 verify with `cfgmtd -r -p /tmp/run -f /tmp/run/read.cfg`. Even then nothing *starts* dropbear:2222 at boot (no hook), so the :2222 listener would still need
 re-starting - an unsolved gap; the realistic design is "re-run install-modem.sh after a modem reboot".
 
-## The cure
-`AT!BAND=0D` then `AT!BAND=00` through `uiwwand-chat -t N '<AT cmd>'`. Profile `00` = all bands; `0D` = "No n28 Test" (same masks, NR NSA without n28).
-The modem re-registers in ~2 minutes; internet is essentially uninterrupted (the user verified no real outage). Typical visible effect: serving cell
-cell A → cell B, LTE B3 → B1+B3, NR ARFCN 152600 → 156600, and speed 5 → ~200 Mbit/s. Other profiles: 01, 02, 06-09, 0C (standard sets).
-`band-cycle.sh` in this repo is a reconstruction (20 s between the two commands); the live original was 634 bytes (KNOWN_GAPS.md).
+## The cure and the custom profile `0D`
+`AT!BAND=0D` then `AT!BAND=00` through `uiwwand-chat -t N '<AT cmd>'`.
+
+**`0D` is a CUSTOM profile created by the owner; it does not exist on a stock modem.** Name `No n28 Test`. Its masks (from `AT!BAND=?`,
+full table in [baselines/band-profiles.txt](baselines/band-profiles.txt)) equal profile `00` ("All bands") in GW, LTE and NRSA, and differ only in the
+NR NSA mask, where n28 is cleared:
+```
+00  3 - NRNSA: 000081A03B0A38D7 0000000000007C62
+0D  3 - NRNSA: 000081A0330A38D7 0000000000007C62     (0x…3B… vs 0x…33…: bit 0x0000000008000000 = n28)
+```
+The stock profiles are 00 (All bands), 01, 02, 06-09, 0C. **The exact command used to create `0D` was not recorded in this repo** - see KNOWN_GAPS.md.
+Consequences enforced by the scripts: `band-cycle.sh` and the dispatcher's `cure` **abort with exit 3 and change nothing** if `AT!BAND=?` does not list `0D`;
+`install-modem.sh` warns when it is missing; `diag` prints the defined profiles and the current one. A modem where `0D` is missing (new unit, factory reset)
+cannot be cured by this project until the profile is recreated by the owner.
+
+Effect of the cycle: the modem re-registers in ~2 minutes; internet is essentially uninterrupted (verified by the owner: no real outage). Typical visible effect:
+serving cell A → cell B, LTE B3 → B1+B3, NR ARFCN 152600 → 156600, speed 5 → ~200 Mbit/s. `band-cycle.sh` waits 20 s between the two commands, restores `00`
+on exit if interrupted by INT/TERM/HUP, and logs to `/tmp/log/band-cycle.log` (persistent partition). The repo version is a reconstruction of the live 634-byte original.
+Never leave the modem in `0D` (it silently lacks n28 NSA): `AT!BAND?` must show `00` after a cure.
 Lighter alternatives were **not** tested: `AT+CGATT=0` / `=1` (supported), `AT+COPS`, `AT+CFUN`. Candidate experiment for a dry-run episode.
 
 ## Useful AT commands (read-only unless marked)

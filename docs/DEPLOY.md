@@ -8,6 +8,7 @@ Time: ~15 min plus the first scrape cycles. Each step has a check; do not contin
 - The host can reach the modem's management IP (`U5G_IP` in `.env`, required) and the UniFi controller URL.
 - **Admin SSH access to the modem** that you can already use from some workstation: the admin user (uid 0, home `/etc/persistent`; name = `U5G_SSH_USER`),
   either key/password on port 22 or key on port 2222. Needed once, for `modem/install-modem.sh`.
+- The custom band profile **`0D`** must already exist on the modem (`AT!BAND=?` lists `0D, No n28 Test`; see docs/MODEM.md). Without it the stack still monitors, but `cure` is refused.
 - A Telegram bot token (BotFather) and the numeric chat id (message the bot, then `curl https://api.telegram.org/bot<TOKEN>/getUpdates`).
 - A **read-only** UniFi API key (UniFi Network → Settings → Control Plane → Integrations).
 Never paste secrets into chat logs, tickets or commits. `.env` and `data/` are git-ignored.

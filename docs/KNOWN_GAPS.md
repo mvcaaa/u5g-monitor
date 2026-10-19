@@ -1,6 +1,9 @@
 # Known gaps and unverified items (read before trusting the repo blindly)
 
 ## Not captured from the live system (could not be read from the authoring environment)
+0. **How the custom band profile `0D` ("No n28 Test") was created.** Only its resulting masks are known (docs/baselines/band-profiles.txt). The `AT!BAND=<index>,<name>,<masks…>`
+   creation syntax for this 5G modem was not recorded and is unverified, so the repo ships **no** script that creates the profile (writing a wrong band table to a modem
+   is not worth guessing). To rebuild: reproduce the masks above with the vendor's AT reference / the owner's notes. Until then `cure` only works on a modem that already has `0D`.
 1. **json_exporter job `u5g_ca`** (carrier-aggregation data from the UniFi API via JSONPath → `u5g_ca_lte_present{primary,band}` etc.).
    Its config contained an API key and was never copied here. Consequence: dashboard panel 106 ("carriers", both dashboards) shows no data,
    and the commented job in `config/prometheus/prometheus.yml` is a placeholder. Rebuild from the UniFi controller's device API if the panel is wanted.

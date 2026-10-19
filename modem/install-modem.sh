@@ -19,4 +19,8 @@ LINE="command=\"/etc/persistent/u5g-dispatch.sh\",no-pty,no-port-forwarding,no-a
 $SSH "grep -qF '$(cut -d' ' -f2 "$PUB")' /etc/persistent/.ssh/authorized_keys || printf '%s\n' '$LINE' >> /etc/persistent/.ssh/authorized_keys"
 # dedicated dropbear: key auth from /etc/persistent/.ssh (the stock dropbear on :22 does not read it)
 $SSH "ps w | grep -q '[-]p 2222' || dropbear -r /var/run/dropbear_ed25519_host_key -p 2222 -l br0 -D /etc/persistent/.ssh -E"
+if ! $SSH "uiwwand-chat -t 5 'AT!BAND=?'" | grep -q '^0D,'; then
+  echo "WARNING: custom band profile 0D is NOT defined on this modem. 'cure' will refuse to run until it exists."
+  echo "         See docs/MODEM.md (section 'The cure') and docs/baselines/band-profiles.txt for the definition."
+fi
 echo "installed. test:  ssh -p 2222 -i data/id_u5g -o BatchMode=yes ${TARGET#*@} ping   (expect: pong)"
