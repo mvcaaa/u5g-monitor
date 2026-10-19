@@ -1,12 +1,15 @@
 #!/bin/bash
 # Run from a workstation that already has admin ssh access to the modem. Installs the dispatcher, band-cycle.sh and the
 # restricted watchdog key, and starts the dedicated dropbear on port 2222. NOTHING is written to flash (see docs/MODEM.md).
-# usage: modem/install-modem.sh <admin_user@modem_ip> [admin_ssh_port]
+# usage: [U5G_PUB=<watchdog_key.pub>] modem/install-modem.sh <admin_user@modem_ip | ssh_alias> [admin_ssh_port]
+# U5G_PUB defaults to data/id_u5g.pub; set it when the watchdog key lives on another host (e.g. a copy of its .pub from TrueNAS).
+# Without a port argument ssh uses its own default or the port from ~/.ssh/config.
 set -e
-TARGET=${1:?usage: $0 user@modem_ip [port]}; PORT=${2:-22}
-HERE=$(cd "$(dirname "$0")" && pwd); PUB=$HERE/../data/id_u5g.pub
-[ -f "$PUB" ] || { echo "run scripts/init.sh first (generates data/id_u5g)"; exit 1; }
-SSH="ssh -p $PORT $TARGET"
+TARGET=${1:?usage: $0 user@modem_ip|ssh_alias [port]}
+HERE=$(cd "$(dirname "$0")" && pwd); PUB=${U5G_PUB:-$HERE/../data/id_u5g.pub}
+[ -f "$PUB" ] || { echo "watchdog public key not found: $PUB (run scripts/init.sh, or set U5G_PUB)"; exit 1; }
+ssh-keygen -lf "$PUB" >/dev/null || { echo "not a valid public key: $PUB"; exit 1; }
+SSH="ssh ${2:+-p $2} $TARGET"
 $SSH 'cat > /etc/persistent/u5g-dispatch.sh && chmod 755 /etc/persistent/u5g-dispatch.sh' < "$HERE/u5g-dispatch.sh"
 if $SSH 'test -f /etc/persistent/band-cycle.sh'; then
   echo "band-cycle.sh already on the modem - leaving the live copy untouched"

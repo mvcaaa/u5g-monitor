@@ -43,5 +43,6 @@ Useful to know when you find it on the box; this repo supersedes it.
 Cron on TrueNAS must be created via UI or `midclt call cronjob.create '{...}'` (not `crontab -e`). In layout B the scripts used
 `D=/mnt/Main/u5g-watchdog`; in this repo they use `/data` inside the agent container (same file layout).
 **Installing/updating layout B from this repo:** `sudo MODEM_HOST=<ip> MODEM_USER=<user> bash scripts/truenas-layout-b-install.sh` (idempotent; copies `agent/*.sh` to `/mnt/Main/u5g-watchdog`, creates/updates the three cron jobs, starts in `dry` + `shadow`).
+**Modem side for layout B** (from the workstation with admin access to the modem): copy `/mnt/Main/u5g-watchdog/id_u5g.pub` (public key only) to the workstation and run `U5G_PUB=<that copy> bash modem/install-modem.sh <ssh_user>@<U5G_IP> [port]`.
 **Migrating B → A:** copy `id_u5g*` and `mode` into `data/`, stop all the cron jobs (probe, light probe, watchdog; `midclt call cronjob.update <id> '{"enabled":false}'`),
 then deploy A. Otherwise both would probe and could both trigger a cure.

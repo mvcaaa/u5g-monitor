@@ -27,6 +27,7 @@ ssh -p 2222 -i data/id_u5g -o BatchMode=yes -o StrictHostKeyChecking=accept-new 
 ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> id                                            # expect: denied
 ```
 If the first prints `Permission denied (publickey,password)` see TROUBLESHOOTING (port 22 vs 2222). `install-modem.sh` does **not** write flash.
+The first argument may also be an ssh alias from `~/.ssh/config` (its port is used unless you pass one). To run it from another machine than the one holding `data/`, set `U5G_PUB` to a copy of the watchdog public key (`id_u5g.pub` only, never the private key).
 
 ## 3. Start
 ```bash
