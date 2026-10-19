@@ -19,4 +19,4 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 - Watchdog `mode=dry` (never cures by itself), `light_mode=shadow` (light probe only measures and logs). Auto-cure was never exercised live.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
 - Open items: compare light vs heavy detection over the next episodes, then decide on `light_mode=primary`; test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)
-  only during an episode and with the owner's go-ahead; evidence package / message for the operator (the owner sends it himself); capture the `u5g_ca` json_exporter config (docs/KNOWN_GAPS.md).
+  only during an episode and with the owner's go-ahead; evidence package / message for the operator (the owner sends it himself).
