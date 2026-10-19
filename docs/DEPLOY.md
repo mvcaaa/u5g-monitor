@@ -46,7 +46,7 @@ Settings → Data Integration → Prometheus: must be **enabled** and allow the 
 ./scripts/verify.sh          # exit 0 expected; FAIL lines tell which doc section to read
 docker compose logs agent --tail 30
 ```
-Then open Grafana (`http://<host>:3000`, folder **U5G**): dashboards "U5G Radio Monitor (EN)" / the RU twin; the Watchdog row
+Then open Grafana (`http://<host>:3000`, folder **U5G**): dashboard "U5G Radio Monitor (EN)"; the Watchdog row
 should show Mode `dry-run`, Modem ssh `ok`, Episode `none`. Alerting → Alert rules: 7 rules in group `u5g`, all Normal.
 Test Telegram: Alerting → Contact points → `telegram` → Test.
 

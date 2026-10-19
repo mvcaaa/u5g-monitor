@@ -21,6 +21,6 @@ done
 [ "$(q 'u5g_watchdog_modem_reachable == 1')" = 1 ] && ok "watchdog reaches the modem" || bad "modem not reachable by the agent (run modem/install-modem.sh)"
 curl -s -u "$(get GRAFANA_ADMIN_USER):$(get GRAFANA_ADMIN_PASSWORD)" "$G/api/v1/provisioning/alert-rules" | grep -q 'u5g-cure-executed' \
   && ok "grafana alert rules provisioned" || bad "grafana alert rules missing"
-curl -s -u "$(get GRAFANA_ADMIN_USER):$(get GRAFANA_ADMIN_PASSWORD)" "$G/api/search?query=U5G" | grep -q 'u5g-radio-monitor' \
+curl -s -u "$(get GRAFANA_ADMIN_USER):$(get GRAFANA_ADMIN_PASSWORD)" "$G/api/search?query=U5G" | grep -q 'u5g-radio-monitor-en' \
   && ok "grafana dashboards provisioned" || bad "grafana dashboards missing"
 echo "mode: $(cat data/mode 2>/dev/null)"; exit $fail
