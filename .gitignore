@@ -6,3 +6,4 @@ config/json_exporter/json_exporter.rendered.yml
 *.key
 id_u5g*
 CLAUDE.local.md
+__pycache__/
