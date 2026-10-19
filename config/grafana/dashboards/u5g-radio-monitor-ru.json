@@ -18,7 +18,7 @@
   {
    "id": 100,
    "type": "row",
-   "title": "Скорость (активная проба Speedtest Tracker, каждые 7 мин)",
+   "title": "Скорость (активная проба Speedtest Tracker, ежечасно)",
    "collapsed": false,
    "gridPos": {
     "h": 1,
