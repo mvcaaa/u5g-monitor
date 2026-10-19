@@ -29,7 +29,7 @@ Good: single 10 MB ≈ 70 Mbit/s, single 50 MB ≈ 106, 4×10 MB parallel ≈ 18
 Host probe, good state (5 MB): DNA ≈ 66 Mbit/s, loaded RTT ≈ 47 ms avg / 95 max, 0 loss; idle ping 56 B ≈ 37 ms, 1472 B ≈ 47 ms.
 
 ## Open questions (what the next episode should answer)
-1. ~~Does `diag` during an episode show anything different?~~ Answered by the first episode, see [episodes/2026-10-19-episode-1.md](episodes/2026-10-19-episode-1.md): heavy TCP reordering (OFO) in the bad state for all destinations, no LTE secondary carrier in GSTATUS, clean ICMP/traceroute, stable radio; none of it shown to be the cause.
+1. ~~Does `diag` during an episode show anything different?~~ Answered by the first episode, see [episodes/2026-10-19-episode-1.md](episodes/2026-10-19-episode-1.md): clean ICMP/traceroute, stable radio, heavy TCP reordering (but it also returns after the cure and tracks carrier aggregation), LTE B1 flapping in both states; nothing on the modem side separates good from bad. DNA ~1 Mbit/s vs Cloudflare uneven.
 2. Does a lighter action (`AT+CGATT=0/1`) cure it? Does staying in profile `0D` for an hour behave differently?
 3. Is the degradation specific to DNA's own servers/paths (nopeus) or to a set of destinations? Add a third probe target (Google/OVH) if needed.
 4. Evidence package for DNA: UniFi multi-day graph, Grafana panel of an episode with annotations, `diag` files, before/after table.

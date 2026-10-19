@@ -9,7 +9,7 @@
 
 ## Timing caveats
 - A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
-  A "cure did not help" result right after a cure may be a false negative - check the dashboard a few minutes later before concluding. Not changed yet (owner decision: keep waiting times as they are).
+  A "cure did not help" result right after a cure may be a false negative - check the dashboard a few minutes later before concluding. Not changed yet (owner decision: keep waiting times as they are). Data point from episode 1: the first good probe came 90 s after `00` was restored (the re-measure at 170 s would have run ~49 s after `00` - untested whether that is already enough).
 - Whether a shorter hold (< 120 s) also cures is untested.
 
 ## Never executed end-to-end in the authoring environment (no Docker daemon there)
