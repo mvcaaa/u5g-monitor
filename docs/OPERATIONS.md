@@ -2,6 +2,8 @@
 
 ## Daily
 - Look at the Grafana dashboard "U5G Radio Monitor (EN)": light probe and diagnostic probe, RTT/loss, Watchdog row. Alerts come to Telegram.
+- Hovering one graph shows the crosshair on all of them (shared crosshair). Manual notes (Ctrl/Cmd+click on a graph) appear only on that panel unless
+  tagged `note`: the annotation query "Notes (all panels)" shows `note`-tagged annotations on every panel.
 - Agent logs: `docker compose logs agent --tail 50` and `data/agent.log`; watchdog events: `data/watchdog.log`; per-episode diagnostics: `data/diag/episode-*.txt`.
 
 ## Mode switch (no restart)
