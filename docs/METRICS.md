@@ -17,13 +17,13 @@
 `_triggers_today`, `_probe_fresh` (light probe sample younger than 10 min), `_last_run_timestamp_seconds`.
 Retired on 2026-10-20: `u5g_watchdog_light_fresh`, `_light_episode_active`, `_light_primary`, `_light_detections_total`. Their history stays in Prometheus until retention drops it.
 
-## Written by `agent/episode-tests.sh` (`data/textfile/u5g_eptest.prom`, once per triggered episode, before any cure; also by a manual run)
+## Written by `agent/episode-tests.sh` (`data/textfile/u5g_eptest_<kind>.prom`, label `kind`: `episode` = once per triggered episode, before any cure; `reference` = good-state run at 04:10 and 16:10)
 | Metric | Labels | Meaning |
 |---|---|---|
 | `u5g_eptest_ping_loss_ratio`, `u5g_eptest_ping_rtt_avg_seconds` | `target=dna\|cloudflare`, `size=56\|1000\|1200\|1400\|1472` | 100 DF pings per size |
 | `u5g_eptest_download_bits_per_second` / `_bytes` / `_http_code` / `_rcv_mss_bytes` | `run=1..4`, `mss=default\|1200\|1000` | 5 MB from DNA with the requested MSS (runs 1 and 4 use the default); `rcv_mss` = segment size the receiver saw |
 | `u5g_eptest_duration_seconds`, `u5g_eptest_last_run_timestamp_seconds` | | how long the tests took and when they ran |
-Values stay until the next run (the file is not removed). The text report of a triggered run is `data/diag/episode-<time>-tests.txt`.
+Values stay until the next run of the same kind. Reports: `data/diag/episode-<time>-tests.txt` / `reference-<time>-tests.txt`, packet headers of the downloads in the matching `.pcap`.
 
 ## Other sources
 `probe_success`, `probe_icmp_duration_seconds{phase="rtt"}` (blackbox);

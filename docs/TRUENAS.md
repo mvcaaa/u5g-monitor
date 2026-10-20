@@ -39,7 +39,7 @@ Useful to know when you find it on the box; this repo supersedes it.
 | `probe.sh` (diagnostics only since 2026-10-20) | `/mnt/Main/u5g-watchdog/probe.sh`, TrueNAS cron job id 1, every 5 min | |
 | `probe-light.sh` | `/mnt/Main/u5g-watchdog/probe-light.sh`, cron job every minute (added 2026-10-19; the episode detector since 2026-10-20) | |
 | `watchdog.sh` + state | `/mnt/Main/u5g-watchdog/`, cron job id 2 (now `* * * * *`, was `2-59/5`), mode file `mode`; the old v1 copy is kept as `watchdog.sh.v1` | |
-| `episode-tests.sh` | `/mnt/Main/u5g-watchdog/episode-tests.sh`, started by `watchdog.sh` (no cron job) | |
+| `episode-tests.sh` | `/mnt/Main/u5g-watchdog/episode-tests.sh`, started by `watchdog.sh` on a trigger, and by cron job "u5g reference tests" (04:10, 16:10, `EPT_KIND=reference`); needs `python3` and `tcpdump` on the host | |
 | watchdog SSH key | `/mnt/Main/u5g-watchdog/id_u5g` | |
 Cron on TrueNAS must be created via UI or `midclt call cronjob.create '{...}'` (not `crontab -e`). In layout B the scripts used
 `D=/mnt/Main/u5g-watchdog`; in this repo they use `/data` inside the agent container (same file layout).

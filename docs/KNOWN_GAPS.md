@@ -14,7 +14,7 @@ The baseline threshold (`LIGHT_K=2`, `LIGHT_FLOOR_SEC=0.8`, clear after 5) was c
 
 ## Episode tests
 `agent/episode-tests.sh` ran on TrueNAS (layout B) in the good state and in the Alpine agent image (downloads only; Docker Desktop fakes ICMP); the watchdog
-hook was tested with stubs (dry, live, `EPTEST=off`, default path). It has **not yet run during a real episode**. Under a 1.5 Mbit/s episode each download
+hook was tested with stubs (dry, live, `EPTEST=off`, default path). It has **not yet run during a real episode**; the same holds for the `diag` after a cure (stubs only). Packet capture and the reference mode ran live on TrueNAS (2026-10-21 00:03). Under a 1.5 Mbit/s episode each download
 takes ~27 s, so the whole run should take ~3.5 min - an estimate.
 
 ## Timing caveats

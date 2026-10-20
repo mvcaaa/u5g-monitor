@@ -70,7 +70,11 @@ On each trigger (after `diag`, before a cure in live mode) the watchdog runs `ag
 to DNA and Cloudflare in parallel, then four 5 MB downloads from DNA with MSS default/1200/1000/default. They tell an MTU/fragmentation problem
 (loss grows with size, smaller MSS restores speed) from a general downlink problem (all sizes and MSS equally slow). ~21 MB, ~2 min in the good state,
 up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. `EPTEST=off` disables them; the plan (owner, 2026-10-20) is to switch them off once 10-15 episodes have been collected.
-Manual run (e.g. a reference in the good state): `docker compose exec agent bash /app/episode-tests.sh` (layout B: `sudo D=/mnt/Main/u5g-watchdog bash /mnt/Main/u5g-watchdog/episode-tests.sh`).
+The TCP/IP headers of the downloads are captured with tcpdump into `<stem>-tests.pcap` (~0.7 MB; `EPT_PCAP=off` disables it).
+A good-state **reference** run (`EPT_KIND=reference`, ~21 MB each, ~42 MB/day) happens at 04:10 and 16:10 (agent loop; layout B: cron job "u5g reference tests")
+and is skipped while an episode is active; its report is `data/diag/reference-<time>-tests.txt`. The dashboard tables show the latest episode and reference runs side by side.
+In live mode the watchdog also saves `diag` **after** the cure (`episode-<time>-after.txt`), so every cured episode has a before/after pair.
+Manual run: `docker compose exec agent env EPT_KIND=reference bash /app/episode-tests.sh` (layout B: `sudo env D=/mnt/Main/u5g-watchdog EPT_KIND=reference bash /mnt/Main/u5g-watchdog/episode-tests.sh`).
 Healthy reference 2026-10-20 20:41: 0 % loss at every size, RTT 36-44 ms, DNA 53-55 Mbit/s (default MSS) and 27-30 (1200/1000).
 Docker Desktop on macOS answers ICMP itself (RTT < 1 ms): run the pings on a Linux host.
 

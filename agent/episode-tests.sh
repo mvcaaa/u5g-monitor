@@ -1,10 +1,16 @@
 #!/bin/bash
-# u5g-episode-tests: discrimination tests run by the watchdog once per triggered episode (before any cure); can also be run by hand.
+# u5g-episode-tests: discrimination tests run by the watchdog once per triggered episode (before any cure), and as a good-state reference
+# twice a day (EPT_KIND=reference, cron); can also be run by hand.
 # 1. 100 DF pings per size (56..1472 B) to DNA and Cloudflare in parallel: does loss depend on packet size (MTU/fragment path)?
 # 2. 5 MB DNA downloads with the default MSS, 1200, 1000 and the default again: does a smaller segment size restore speed?
-# Human-readable report on stdout; metrics to $D/textfile/u5g_eptest.prom (atomic). About 21 MB of traffic, 2-6 min.
+# 3. TCP/IP headers of the downloads are captured with tcpdump (if installed) to <stem>-tests.pcap (~2-3 MB).
+# Report on stdout (reference: <stem>-tests.txt); metrics labelled kind=episode|reference to $D/textfile/u5g_eptest_<kind>.prom (atomic).
+# About 21 MB of traffic, 2-6 min. A reference run is skipped while an episode is active.
 D=${D:-/data}
-OUT=$D/textfile/u5g_eptest.prom
+KIND=${EPT_KIND:-episode}
+STEM=${EPT_STEM:-$D/diag/$([ "$KIND" = reference ] && echo reference || echo manual)-$(date +%Y%m%d-%H%M)}
+PCAP=${EPT_PCAP:-$STEM-tests.pcap}   # "off" disables the capture
+OUT=$D/textfile/u5g_eptest_$KIND.prom
 DNA_HOST=${DNA_HOST:-nopeus.dna.fi}
 CF_HOST=${CF_HOST:-speed.cloudflare.com}
 SIZES=${EPT_SIZES:-56 1000 1200 1400 1472}
@@ -12,11 +18,16 @@ COUNT=${EPT_COUNT:-100}
 MSSL=${EPT_MSS:-0 1200 1000 0}   # 0 = default MSS
 DLSIZE=${EPT_DLSIZE:-5000000}
 DLMAXT=${EPT_DLMAXT:-60}
-mkdir -p "$D/textfile"
+mkdir -p "$D/textfile" "$D/state" "$D/diag"
+exec 8>"$D/state/eptest.lock"; flock -n 8 || { echo "episode tests already running"; exit 0; }
+if [ "$KIND" = reference ]; then
+  grep -q '^LIGHT_ACTIVE=1' "$D/state/state.env" 2>/dev/null && exit 0
+  exec > "$STEM-tests.txt" 2>&1
+fi
 T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
 t0=$(date +%s)
-echo "episode tests start $(date '+%F %T %Z')"
+echo "episode tests ($KIND) start $(date '+%F %T %Z')"
 
 pingset() { # name host
   for s in $SIZES; do
@@ -31,6 +42,11 @@ pingset cloudflare "$CF_HOST" &
 wait
 cat "$T/dna.txt" "$T/cloudflare.txt" 2>/dev/null
 
+TP=
+if [ "$PCAP" != off ] && command -v tcpdump >/dev/null 2>&1; then
+  tcpdump -i any -p -n -s 96 -w "$PCAP" "host $DNA_HOST and tcp port 8080" 2>"$T/tcpdump.err" &
+  TP=$!; sleep 1
+fi
 # Downloads: python sets TCP_MAXSEG before connect and reads TCP_INFO (rcv_mss, advmss, rtt) afterwards; Linux only.
 python3 -I - "$DNA_HOST" "$DLSIZE" "$DLMAXT" $MSSL > "$T/dl.txt" 2>&1 <<'EOF'
 import socket, struct, sys, time
@@ -70,11 +86,15 @@ for run, mss in enumerate((int(m) for m in sys.argv[4:]), 1):
     print(f"u5g_eptest_download_rcv_mss_bytes{{{l}}} {rcv}")
 EOF
 grep '^#' "$T/dl.txt" | sed 's/^# //'
+if [ -n "$TP" ]; then
+  sleep 1; kill "$TP" 2>/dev/null; wait "$TP" 2>/dev/null
+  echo "pcap: $PCAP ($(stat -c %s "$PCAP" 2>/dev/null || echo 0) bytes) $(grep -E 'captured|dropped by kernel' "$T/tcpdump.err" | tr '\n' ' ')"
+fi
 
 {
   cat "$T/dna.prom" "$T/cloudflare.prom" 2>/dev/null
   grep '^u5g_' "$T/dl.txt"
   echo "u5g_eptest_duration_seconds $(( $(date +%s) - t0 ))"
   echo "u5g_eptest_last_run_timestamp_seconds $(date +%s)"
-} > "$OUT.tmp" && chmod 644 "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
-echo "episode tests end $(date '+%F %T %Z')"
+} | sed -e "s/{/{kind=\"$KIND\",/" -e "/{kind=/!s/^\([a-z0-9_]*\) /\1{kind=\"$KIND\"} /" > "$OUT.tmp" && chmod 644 "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
+echo "episode tests ($KIND) end $(date '+%F %T %Z')"

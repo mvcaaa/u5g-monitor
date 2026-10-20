@@ -84,7 +84,7 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
     timeout 220 $SSHC diag > "$f" 2>&1
     if [ "$EPTEST" != off ] && [ -f "$EPTEST" ]; then
       log "EPISODE: running tests -> ${f%.txt}-tests.txt"
-      D="$D" timeout 420 bash "$EPTEST" > "${f%.txt}-tests.txt" 2>&1
+      D="$D" EPT_KIND=episode EPT_STEM="${f%.txt}" timeout 420 bash "$EPTEST" > "${f%.txt}-tests.txt" 2>&1
     fi
     if [ "$MODE" = live ]; then
       CURES_TOTAL=$((CURES_TOTAL + 1)); LAST_CURE_TS=$(date +%s)
@@ -95,6 +95,8 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
       set -- $(tail -n 1 "$LL" 2>/dev/null)
       if [ "${3:-0}" = 200 ] && awk -v t="${2:-99}" -v th="$lthr" 'BEGIN{exit !(t<th)}'; then LAST_RESULT=1; else LAST_RESULT=0; fi
       log "CURE result=$LAST_RESULT 1 MB in ${2:-?}s (threshold ${lthr}s) code=${3:-?}"
+      log "CURE: running diag after the cure -> ${f%.txt}-after.txt"
+      timeout 220 $SSHC diag > "${f%.txt}-after.txt" 2>&1
     else
       DRY_TOTAL=$((DRY_TOTAL + 1))
       log "DRY-RUN: would cure now (no action taken)"
