@@ -89,8 +89,8 @@ services:
       MODEM_HOST: ${U5G_IP}
       MODEM_USER: ${U5G_SSH_USER:-admin}
       MODEM_SSH_PORT: ${U5G_SSH_PORT:-2222}
-      MININT: ${WD_MIN_INTERVAL:-10800}
-      MAXDAY: ${WD_MAX_PER_DAY:-4}
+      MININT: ${WD_MIN_INTERVAL:-3600}
+      MAXDAY: ${WD_MAX_PER_DAY:-0}
       LNEED: ${LIGHT_NEED:-3}
       LOUT: ${LIGHT_CLEAR:-5}
       LK: ${LIGHT_K:-2}

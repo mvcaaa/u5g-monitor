@@ -16,7 +16,7 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 
 ## Where things stand (2026-10-20)
 - Stack is deployed on the owner's TrueNAS in "layout B" (hand-built UI apps + cron, see docs/TRUENAS.md); the compose stack in this repo is the portable, tested-by-config-only version.
-- Watchdog `mode=dry` (never cures by itself). Auto-cure was never exercised live.
+- Watchdog `mode=live` since 2026-10-20 21:00 (owner's decision): on each episode diag -> episode tests -> cure, at most one trigger per hour, no daily limit. The first real auto-cure has not happened yet; check `watchdog.log` "CURE result" after the next episode.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
 - Episodes 2 (night, untreated, ended by itself after ~7.7 h) and 3 (midday, cured by hand; recovery already during the 0D hold): docs/episodes/2026-10-20-episodes-2-3.md.
 - The light probe (1 MB/min) is the only detector since 2026-10-20 15:27 (owner's decision; the 5 MB probe.sh stays as diagnostics only; Speedtest Tracker removed): episode = 3 samples in a row >= max(2 x baseline, 0.8 s), clear after 5 fast.

@@ -33,7 +33,7 @@ $SSH cure                          # starts the band cycle in the background (ho
 
 ## Tuning (`.env`, then `docker compose up -d agent`)
 `LIGHT_K` (2), `LIGHT_FLOOR_SEC` (0.8), `LIGHT_NEED` (slow samples in a row to start an episode, 3), `LIGHT_CLEAR` (fast samples in a row to end it, 5),
-`WD_MIN_INTERVAL` (s between triggers, 10800), `WD_MAX_PER_DAY` (4).
+`WD_MIN_INTERVAL` (s between triggers, 3600; was 10800 until 2026-10-20), `WD_MAX_PER_DAY` (0 = no limit; removed 2026-10-20 on the owner's decision, `WD_MIN_INTERVAL` is the guard against cure loops).
 Probe size/target: `LIGHT_SIZE`, and `LIGHT_URL`/`LIGHT_MAXT` on the agent service; diagnostic probe: `SIZE`, `PINGHOST`, `DNA_URL`, `CF_URL`.
 
 ## After a modem restart (planned reboot or firmware upgrade)
@@ -69,7 +69,7 @@ Mild drops of ~12-14 Mbit/s look like the slow tail of the good state and are no
 On each trigger (after `diag`, before a cure in live mode) the watchdog runs `agent/episode-tests.sh`: 100 DF pings per size (56/1000/1200/1400/1472 B)
 to DNA and Cloudflare in parallel, then four 5 MB downloads from DNA with MSS default/1200/1000/default. They tell an MTU/fragmentation problem
 (loss grows with size, smaller MSS restores speed) from a general downlink problem (all sizes and MSS equally slow). ~21 MB, ~2 min in the good state,
-up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. `EPTEST=off` disables them.
+up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. `EPTEST=off` disables them; the plan (owner, 2026-10-20) is to switch them off once 10-15 episodes have been collected.
 Manual run (e.g. a reference in the good state): `docker compose exec agent bash /app/episode-tests.sh` (layout B: `sudo D=/mnt/Main/u5g-watchdog bash /mnt/Main/u5g-watchdog/episode-tests.sh`).
 Healthy reference 2026-10-20 20:41: 0 % loss at every size, RTT 36-44 ms, DNA 53-55 Mbit/s (default MSS) and 27-30 (1200/1000).
 Docker Desktop on macOS answers ICMP itself (RTT < 1 ms): run the pings on a Linux host.

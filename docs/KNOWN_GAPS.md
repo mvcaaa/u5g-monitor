@@ -30,5 +30,5 @@ takes ~27 s, so the whole run should take ~3.5 min - an estimate.
 
 ## Design limitations
 - Modem reboot wipes the dispatcher/key/:2222 listener (MODEM.md). Alert "modem unreachable" is the mitigation.
-- Auto-cure has only been exercised in tests; the first real `live` cure is an open experiment. Keep dry-run until an episode has been observed.
+- Auto-cure (live mode, on since 2026-10-20 21:00) has only been exercised with stubs; the first real automatic cure is still to come. Manual cures with the same `band-cycle.sh` worked in episodes 1, 3 and 4.
 - The detector sees only DNA's server and only the time of 1 MB. The 5 MB diagnostic probe (DNA vs Cloudflare, loaded RTT, OFO) is noisy (e.g. DNA 28 vs 66 Mbit/s a few minutes apart in the good state) and no longer decides anything.

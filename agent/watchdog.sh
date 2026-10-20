@@ -6,8 +6,8 @@ OUTP=$D/textfile/u5g_watchdog.prom
 ST=$D/state; SE=$ST/state.env; LOG=$D/watchdog.log
 mkdir -p "$ST" "$D/diag"
 MODE=$(cat "$D/mode" 2>/dev/null || echo dry)
-MININT=${MININT:-10800}     # min seconds between triggers
-MAXDAY=${MAXDAY:-4}         # max triggers per day
+MININT=${MININT:-3600}      # min seconds between triggers (episodes so far were >= 4.4 h apart; a failed cure is retried after 1 h)
+MAXDAY=${MAXDAY:-0}         # max triggers per day, 0 = no limit (MININT alone prevents cure loops)
 WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring (the modem cycle itself holds 0D for 120 s, see docs/KNOWN_GAPS.md)
 SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
 PROBE=${PROBE:-$D/probe-light.sh}
@@ -75,7 +75,7 @@ elif [ "$ep" = 0 ] && [ "$LIGHT_ACTIVE" = 1 ]; then
 fi
 
 # 3. trigger
-if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && [ "$DAY_COUNT" -lt "$MAXDAY" ]; then
+if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" = 0 ] || [ "$DAY_COUNT" -lt "$MAXDAY" ]; }; then
   if $SSHC ping 2>/dev/null | grep -q pong; then
     reach=1
     LAST_TRIGGER=$now; DAY_COUNT=$((DAY_COUNT + 1))
