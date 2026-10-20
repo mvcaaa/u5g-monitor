@@ -50,6 +50,14 @@ unaffected does not contradict it: the context is per UE. Whether those devices 
 Tests that would confirm or refute M1 (only during an episode, with the owner's go-ahead): a short hold (`band-cycle.sh 20`); packet-size ping and
 reduced-MSS downloads (size-dependent loss on the NR leg); staying LTE-only (`0D`) for a longer period and checking that no episode occurs.
 
+## Load as a trigger? (2026-10-20)
+Episode onsets 1 and 2 fell inside long, heavy household downloads (45-92 Mbit/s for 10-40 min), onset 3 came 8 min after a 39 Mbit/s burst;
+but bursts >= 30 Mbit/s happened 51 times in ~26 h. A deliberate test did **not** start an episode: 10 rounds of 60 s x 8 parallel downloads from
+`nopeus.dna.fi` (139-184 Mbit/s, ~12.6 GB, 16:20-17:10) with the light probe normal in every pause (an earlier Cloudflare run was cut short by
+Cloudflare's 429 rate limit after ~1.7 GB). Short bursts are therefore not a reliable trigger; long mixed-destination load is still open.
+During episodes the household WAN traffic still reached 40-65 Mbit/s aggregate while DNA's light probe stayed at ~1.5 Mbit/s: capacity is there,
+only some flows suffer.
+
 ## Traceroute (good state) to nopeus.dna.fi
 `172.20.47.1` → `172.20.47.2/.0/.3` → `62.197.175.66` → `62.197.175.67` (destination), ~35 ms; hops 1-2 are CGNAT-internal. Compare with an episode's `diag`.
 
