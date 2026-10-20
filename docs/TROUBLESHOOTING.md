@@ -15,7 +15,7 @@
 | `u5g_probe_*` stale alert | `docker compose logs agent`; the agent needs internet at first start (apk). Check `data/state/heartbeat` age. |
 | Agent healthcheck unhealthy | loop stuck (a cure waits ≥ 170 s, diag ≤ 220 s - give it 6 min) or `data/` not writable. |
 | `probe` http_code 000 / speed 0 | host has no route to `nopeus.dna.fi:8080` or Cloudflare; the watchdog ignores non-200 samples (never counts them as slow). |
-| Episode never triggers although speed is bad | needs 3 consecutive samples with HTTP 200 and DNA < `WD_THRESH` within 25 min; or the 3 h / 4-per-day limit is active (see `watchdog.log` "suppressed"). |
+| Episode never triggers although speed is bad | needs 3 light samples in a row (HTTP 200) above `u5g_watchdog_light_threshold_seconds` (dashboard light panel); or the 3 h / 4-per-day limit is active (see `watchdog.log` "suppressed"). |
 | Pasting multi-line commands garbles input (owner's terminal) | use the provided scripts/files (`scp`/`SendUserFile`), single short lines only. |
 | Speedtest Tracker run fails with `Error: [-3] Try again`; the `speedtest_tracker_*` speed series vanish (only `speedtest_tracker_result_id{status="failed"}` stays) | Temporary DNS resolution failure inside the container (`EAI_AGAIN`; seen 2026-10-19 for ~20 min while ICMP and the 5 MB DNA probe were fine). Not a modem episode by itself; re-run the test. Check `getent hosts www.speedtest.net` in the container if it persists. |
 | Alert fires when a speed test merely failed | The speed alert must have `noDataState: OK` (the provisioned rule has it). A hand-made rule defaulting to `NoData` pages on every failed test. Liveness is covered by "probe is stale" / "watchdog is stale". |

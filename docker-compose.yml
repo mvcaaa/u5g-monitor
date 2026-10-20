@@ -106,18 +106,16 @@ services:
       TZ: ${TZ:-Europe/Helsinki}
       D: /data
       DIR: /data
-      PROBE: /app/probe.sh
+      PROBE: /app/probe-light.sh
       MODEM_HOST: ${U5G_IP}
       MODEM_USER: ${U5G_SSH_USER:-admin}
       MODEM_SSH_PORT: ${U5G_SSH_PORT:-2222}
-      THRESH: ${WD_THRESH:-8000000}
-      NEED: ${WD_NEED:-3}
       MININT: ${WD_MIN_INTERVAL:-10800}
       MAXDAY: ${WD_MAX_PER_DAY:-4}
       LNEED: ${LIGHT_NEED:-3}
       LOUT: ${LIGHT_CLEAR:-5}
-      LK: ${LIGHT_K:-4}
-      LFLOOR: ${LIGHT_FLOOR_SEC:-1.5}
+      LK: ${LIGHT_K:-2}
+      LFLOOR: ${LIGHT_FLOOR_SEC:-0.8}
       LIGHT_SIZE: ${LIGHT_SIZE:-1000000}
     volumes:
       - ./agent:/app:ro

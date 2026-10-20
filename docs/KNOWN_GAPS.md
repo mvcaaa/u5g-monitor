@@ -10,7 +10,7 @@
 Not run: the compose `json-exporter` against the real controller (TLS, API key accepted).
 
 ## Light probe calibration
-The baseline threshold (`LIGHT_K=4`, `LIGHT_FLOOR_SEC=1.5`, clear after 5) was tuned by replaying ~19 h of history with two episodes (2026-10-20): the slow state is 3.5-5 s against a baseline of ~0.47 s, so any k from 3 to 6 separated them. That is a small sample; the shadow mode stays until more episodes and good days confirm it. A baseline learned during a long episode is excluded by design (only fast samples outside light episodes are learned), but an episode that starts before 30 baseline samples exist is judged against the 0.5 s default.
+The baseline threshold (`LIGHT_K=2`, `LIGHT_FLOOR_SEC=0.8`, clear after 5) was chosen from ~19 h of history with two severe episodes (2026-10-20): they are 3.5-5 s against a baseline of ~0.47 s, and in ~9 h of good state no threshold of 0.8 s or more was exceeded 3 times in a row. Detection of mild drops (~10 Mbit/s) is an estimate; no mild episode is in the data yet. That is a small sample; the shadow mode stays until more episodes and good days confirm it. A baseline learned during a long episode is excluded by design (only fast samples outside light episodes are learned), but an episode that starts before 30 baseline samples exist is judged against the 0.5 s default.
 
 ## Timing caveats
 - A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
@@ -20,10 +20,10 @@ The baseline threshold (`LIGHT_K=4`, `LIGHT_FLOOR_SEC=1.5`, clear after 5) was t
 ## Never executed end-to-end in the authoring environment (no Docker daemon there)
 - `docker compose up`, image pulls (tags `prom/prometheus:v3.5.0`, `grafana/grafana:12.1.0`, `prom/node-exporter:v1.9.1` are unverified - `docker compose pull` fails loudly if one is wrong; `blackbox-exporter:v0.29.0` was used live),
   Grafana file provisioning of alert rules/contact point (live rules were created through the HTTP API, and the equivalent payloads worked), Speedtest Tracker env-based Prometheus integration (live: enabled in the UI).
-- Validated only: YAML/JSON syntax, `docker compose config`, shell syntax, `init.sh` (with a stubbed `ssh-keygen`), watchdog decision logic with stubbed ssh/probe (dry and live paths), `probe.sh` offline smoke test, `setup`-time scripts earlier run live on TrueNAS (probe v3, watchdog, dispatcher, forced-command key).
+- Validated only: YAML/JSON syntax, `docker compose config`, shell syntax, `init.sh` (with a stubbed `ssh-keygen`), watchdog decision logic with stubbed ssh/probe (dry and live paths) and replayed light-probe history, `setup`-time scripts earlier run live on TrueNAS (probe v3, watchdog, dispatcher, forced-command key).
 - `scripts/verify.sh` has never been run against a real stack.
 
 ## Design limitations
 - Modem reboot wipes the dispatcher/key/:2222 listener (MODEM.md). Alert "modem unreachable" is the mitigation.
 - Auto-cure has only been exercised in tests; the first real `live` cure is an open experiment. Keep dry-run until an episode has been observed.
-- Probe size is 5 MB single stream: noisy (e.g. DNA 28 vs 66 Mbit/s a few minutes apart in the good state). The 3-in-a-row rule and 8 Mbit/s threshold are meant to absorb this.
+- The detector sees only DNA's server and only the time of 1 MB: no Cloudflare comparison, no loaded RTT/OFO counters, no public-IP record any more (the 5 MB probe was retired on 2026-10-20). For an episode's details use `diag` and the manual tests in OPERATIONS.md.

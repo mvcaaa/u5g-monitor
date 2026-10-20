@@ -8,9 +8,8 @@ Russian short version: [README.ru.md](README.ru.md)
 
 ## What it does
 - Collects U5G radio/WAN metrics (unpoller), carrier aggregation (json_exporter), hourly speed tests (Speedtest Tracker), ICMP path metrics (blackbox).
-- Every minute a **light probe** downloads 1 MB from DNA (judged by time; earlier detection, shadow mode by default). Every 5 min the **agent** downloads 5 MB from DNA's server (`nopeus.dna.fi`) and Cloudflare, measuring speed, RTT under
-  load, big-packet (1472 B, DF) ping, receiver-side TCP out-of-order/DSACK counters, public IP.
-- The **watchdog** declares an *episode* when the DNA probe is < 8 Mbit/s for 3 consecutive probes, then runs a read-only
+- Every minute a **light probe** downloads 1 MB from DNA's server (`nopeus.dna.fi`) and records the download time.
+- The **watchdog** declares an *episode* when 3 light probes in a row take longer than twice the good-state baseline (median of ~24 h), then runs a read-only
   diagnostic bundle on the modem (`diag`) and - only in `live` mode - the cure (`cure`), re-measures, and records the result.
 - Grafana dashboards + Telegram alerts. Everything is provisioned from files; no manual UI work.
 
@@ -27,7 +26,7 @@ Russian short version: [README.ru.md](README.ru.md)
 | Path | Purpose |
 |---|---|
 | `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, json-exporter, speedtest-tracker, agent |
-| `agent/probe.sh`, `agent/watchdog.sh`, `agent/entrypoint.sh` | probes and watchdog (run inside the `agent` container) |
+| `agent/probe-light.sh`, `agent/watchdog.sh`, `agent/entrypoint.sh` | probe and watchdog (run inside the `agent` container) |
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
 | `config/` | Prometheus, blackbox, json_exporter (template, key rendered by `scripts/init.sh`), Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |

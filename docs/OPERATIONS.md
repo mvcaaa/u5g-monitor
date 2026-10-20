@@ -20,7 +20,7 @@ $SSH cure                          # starts the band cycle in the background (ho
 ```
 
 ## Episode playbook
-1. Telegram: "episode detected (dry-run)" (or "cure executed" in live mode).
+1. Telegram: "episode started", then "episode detected (dry-run)" (or "cure executed" in live mode).
 2. Read `data/watchdog.log` and the newest `data/diag/episode-*.txt`. Compare with `docs/baselines/` (good-state reference): DNA vs Cloudflare speed,
    `delta ... ofo/dsack`, traceroute, `AT!GSTATUS?` cell/bands.
 3. Before curing manually run extra tests worth keeping for the DNA case (the host probe history is in Prometheus already): `ssh <ssh_user>@<U5G_IP> 'sh -s' < modem/ofo-test.sh` (admin login, read-only, ~1 min) gives speed and TCP out-of-order counters per destination (DNA / Cloudflare / DNA). Run it again after the cure for a before/after pair.
@@ -28,8 +28,9 @@ $SSH cure                          # starts the band cycle in the background (ho
 5. Add the episode to the evidence package (screenshots with annotations, diag files) and record it in `docs/episodes/` (see `2026-10-19-episode-1.md` as the template).
 
 ## Tuning (`.env`, then `docker compose up -d agent`)
-`WD_THRESH` (bit/s, default 8000000), `WD_NEED` (consecutive slow probes, 3), `WD_MIN_INTERVAL` (s between triggers, 10800), `WD_MAX_PER_DAY` (4).
-Speedtest cadence: `SPEEDTEST_SCHEDULE` (default hourly `7 * * * *`); servers: `SPEEDTEST_SERVERS`. Probe size/target: env `SIZE`, `PINGHOST`, `DNA_URL`, `CF_URL` on the agent service.
+`LIGHT_K` (2), `LIGHT_FLOOR_SEC` (0.8), `LIGHT_NEED` (slow samples in a row to start an episode, 3), `LIGHT_CLEAR` (fast samples in a row to end it, 5),
+`WD_MIN_INTERVAL` (s between triggers, 10800), `WD_MAX_PER_DAY` (4). Speedtest cadence: `SPEEDTEST_SCHEDULE` (default hourly `7 * * * *`); servers: `SPEEDTEST_SERVERS`.
+Probe size/target: `LIGHT_SIZE`, and `LIGHT_URL`/`LIGHT_MAXT` on the agent service.
 
 ## After a modem restart (planned reboot or firmware upgrade)
 The modem runs OpenWrt from tmpfs: everything this project puts on it (dispatcher, restricted key, `band-cycle.sh`, the :2222 dropbear) lives in RAM and is **lost on every reboot**.
@@ -45,21 +46,20 @@ Nothing is written to flash by design. Expect the alert "modem unreachable" afte
 2. Test the channel: `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> ping` → `pong`. If the host key changed after a firmware upgrade, the agent container's known_hosts is not persisted: `docker compose up -d --force-recreate agent`; for a manual test from your shell use `ssh-keygen -R '[<U5G_IP>]:2222'`.
 3. Check that the custom profile survived: `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> diag | grep -c '^0D,'` should not be 0 (the installer also warns). Profiles are stored in the modem and normally survive a reboot, but a firmware/modem-firmware upgrade may reset them - **unverified**. If `0D` is gone and the owner wants it back: `ssh <ssh_user>@<U5G_IP> 'sh -s' < modem/create-profile-0d.sh` (see MODEM.md). Without `0D` the cure is refused, monitoring continues.
 4. Check `AT!BAND?` shows `00` and `AT!SELRAT?` shows `00, Automatic`.
-5. After a firmware upgrade: re-run `diag` and compare with `docs/baselines/good-state-2026-10-19.md` (idle ping ~37 ms, 4-hop traceroute, DNA 5 MB probe 28-66 Mbit/s); the AT command set, `uiwwand-chat`, `/etc/persistent` behaviour and the dropbear flags may differ in a new firmware - verify before trusting automation.
+5. After a firmware upgrade: re-run `diag` and compare with `docs/baselines/good-state-2026-10-19.md` (idle ping ~37 ms, 4-hop traceroute; light probe baseline ~0.5 s); the AT command set, `uiwwand-chat`, `/etc/persistent` behaviour and the dropbear flags may differ in a new firmware - verify before trusting automation.
 6. Only then `echo live > data/mode` (if it was live), and confirm the alert "modem unreachable" cleared and `u5g_watchdog_modem_reachable 1` is exported.
 7. Note the reboot time: it may have cured an episode by itself (re-registration), which matters for the case with DNA. Mark it on the dashboard or in `watchdog.log`.
 
-## Light probe (earlier detection)
-Every minute `agent/probe-light.sh` downloads 1 MB from DNA and judges it by **time** (good state 0.3-0.8 s, calibration in `docs/baselines/light-probe-calibration-2026-10-19.md`;
-slow state 3.5-5 s, 5 s = timeout). The threshold follows a **baseline**: median of the last ~24 h of good-state samples (`data/state/light-base.log`, learned only outside light episodes;
-0.5 s until 30 samples exist), threshold = max(4 x baseline, 1.5 s) (`LIGHT_K`, `LIGHT_FLOOR_SEC`). Three samples in a row above it (HTTP 200) = a light episode; it clears after 5 in a row below;
-failed samples (non-200) neither count nor clear. Replayed on 2026-10-19/20 history it detects 2-3 minutes after onset (heavy probe: 7-15) with no false clears; see
+## Light probe (the episode detector)
+Every minute `agent/probe-light.sh` downloads 1 MB from DNA and records the **time** (speed of a 1 MB file is distorted by TCP slow start).
+Good state: median 0.47 s, 98th percentile 1.07 s; severe episode (DNA ~1.5 Mbit/s) 3.5-5 s, 5 s = timeout. Calibration: `docs/baselines/light-probe-calibration-2026-10-19.md`.
+The threshold follows a **baseline**: median of the last ~24 h of good-state samples (`data/state/light-base.log`, learned only outside episodes;
+0.5 s until 30 samples exist), threshold = max(2 x baseline, 0.8 s) (`LIGHT_K`, `LIGHT_FLOOR_SEC`), i.e. ~0.95 s, which a 1 MB download exceeds at
+roughly 10 Mbit/s and below (estimate from a 0.2 s setup + transfer model, not measured). Three samples in a row above it (HTTP 200) start an episode; it ends
+after 5 in a row below; failed samples (non-200) neither count nor clear. In ~9 h of good state (2026-10-19/20) no threshold of 0.8 s or more was exceeded
+3 times in a row. Replayed on that history it detects 2-3 minutes after onset (the retired 5 MB probe: 7-15) with no false clears; see
 `docs/episodes/2026-10-20-episodes-2-3.md`. The dashboard panel shows the probe time with the baseline and threshold lines.
-- `cat data/light_mode`: `shadow` (default) = only logs "LIGHT episode detected [shadow]" and sets `u5g_watchdog_light_*` metrics; nothing is triggered by it.
-  Compare the timestamps with the later "EPISODE:" line of the heavy probe in `data/watchdog.log` to see how much earlier it was, and watch for false detections in good periods.
-- `echo primary > data/light_mode`: a light episode triggers diag (and the cure in live mode) like the heavy one, with the same interval/day limits. Do this only after the shadow run is clean.
-- `echo off > data/light_mode`: ignore the light probe.
-The light probe cannot see mild episodes (about 5-14 Mbit/s): 1 MB then takes < 1.6 s, like the good state. The 5-minute 5 MB probe stays as the second level.
+Mild drops of ~12-14 Mbit/s look like the slow tail of the good state and are not detected; the hourly Speedtest and its "Speed drop" alert remain as a coarse net.
 
 ## Updating dashboards/alerts in an existing (non-provisioned) Grafana
 `python3 scripts/import-dashboard-api.py config/grafana/dashboards/u5g-radio-monitor-en.json` (overwrites by uid, asks for the admin password) and `python3 scripts/setup-alerts-api.py` (creates only the missing rules).

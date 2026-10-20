@@ -14,11 +14,11 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 - Honest reporting: say what was verified and what is inference; retract wrong statements openly. Do not claim live behaviour you did not observe.
 - Everything implemented on the live system must also be in this repo (scripts, dashboards, alerts, docs), with a commit; live-only hacks are not acceptable.
 
-## Where things stand (2026-10-19)
+## Where things stand (2026-10-20)
 - Stack is deployed on the owner's TrueNAS in "layout B" (hand-built UI apps + cron, see docs/TRUENAS.md); the compose stack in this repo is the portable, tested-by-config-only version.
-- Watchdog `mode=dry` (never cures by itself), `light_mode=shadow` (light probe only measures and logs). Auto-cure was never exercised live.
+- Watchdog `mode=dry` (never cures by itself). Auto-cure was never exercised live.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
 - Episodes 2 (night, untreated, ended by itself after ~7.7 h) and 3 (midday, cured by hand; recovery already during the 0D hold): docs/episodes/2026-10-20-episodes-2-3.md.
-- Light detector judges against a good-state baseline (threshold max(4 x baseline, 1.5 s), clear after 5 fast; live on TrueNAS since 2026-10-20 14:44, still `shadow`).
-- Open items: compare the baseline light detector with the heavy one over the next episodes, then decide on `light_mode=primary`; test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)
+- The light probe (1 MB/min) is the only detector since 2026-10-20 15:27 (owner's decision; the 5 MB probe.sh is retired): episode = 3 samples in a row >= max(2 x baseline, 0.8 s), clear after 5 fast.
+- Open items: watch the first live episodes of the light-only detector (detection delay, false starts/clears; mild ~10 Mbit/s drops are an estimate); test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)
   only during an episode and with the owner's go-ahead; evidence package / message for the operator (the owner sends it himself).
