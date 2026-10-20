@@ -58,6 +58,17 @@ To check: the NR PCI of the serving n28 cell (if any AT query exposes it) agains
 when the antenna is turned towards the SSE site; whether episodes stop when the NR leg is gone. For the operator: ask whether n28 is served from
 the western site for this subscriber and whether the X2/transport between the two sites had changes on 2026-10-06.
 
+**Pre-registered prediction for the antenna turn (written 2026-10-21, before the turn).** The antenna is directional, so turning it from
+~265° (west) to ~150° (SSE) changes its gain towards the two sites in opposite directions. Compare `u5g_radio_lte_rsrp_dbm` / `_nr_rsrp_dbm`
+(and SINR) over the hour before and each position after, same-frequency cells only (LTE B3 1351 / NR n28 152600 or 156600; a carrier change
+makes the comparison invalid):
+| Observation after the turn | Conclusion |
+|---|---|
+| LTE RSRP **rises** while NR RSRP **falls** (or the NR leg disappears) | different sites: **M1-XS supported** |
+| LTE and NR RSRP **rise together** by a similar amount (within ~3 dB) | same site: **M1-XS refuted** |
+| an intermediate position (~205°) | a third point to show the trend |
+Independent checks: the NR PCI of the phone's n28 leg (NetMonster) against CellMapper's NR cells; the operator's answer.
+
 Tests that would confirm or refute M1 (only during an episode, with the owner's go-ahead): a short hold (`band-cycle.sh 20`); packet-size ping and
 reduced-MSS downloads (size-dependent loss on the NR leg); staying LTE-only (`0D`) for a longer period and checking that no episode occurs.
 
