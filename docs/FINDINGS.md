@@ -60,8 +60,8 @@ the western site for this subscriber and whether the X2/transport between the tw
 
 **Pre-registered prediction for the antenna turn (written 2026-10-21, before the turn).** The antenna is directional, so turning it from
 ~265° (west) to ~150° (SSE) changes its gain towards the two sites in opposite directions. Compare `u5g_radio_lte_rsrp_dbm` / `_nr_rsrp_dbm`
-(and SINR) over the hour before and each position after, same-frequency cells only (LTE B3 1351 / NR n28 152600 or 156600; a carrier change
-makes the comparison invalid):
+(and SINR) over the hour before and each position after, same carriers before and after only (on 2026-10-21 01:00: LTE primary B1 EARFCN 299, NR n28 ARFCN 156600; a carrier change
+makes the comparison invalid). Values at that time: LTE RSRP -81.8..-87.0 dBm (4 antennas), SINR 17 dB; NR RSRP -72 dBm, SINR 2.9 dB:
 | Observation after the turn | Conclusion |
 |---|---|
 | LTE RSRP **rises** while NR RSRP **falls** (or the NR leg disappears) | different sites: **M1-XS supported** |
