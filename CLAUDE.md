@@ -16,12 +16,12 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 
 ## Where things stand (2026-10-20)
 - Stack is deployed on the owner's TrueNAS in "layout B" (hand-built UI apps + cron, see docs/TRUENAS.md); the compose stack in this repo is the portable, tested-by-config-only version.
-- Watchdog `mode=live` since 2026-10-20 21:00 (owner's decision): on each episode diag -> episode tests -> cure, at most one trigger per hour, no daily limit. The first real auto-cure has not happened yet; check `watchdog.log` "CURE result" after the next episode.
+- Watchdog `mode=live` since 2026-10-20 21:00 (owner's decision): on each episode diag -> episode tests -> cure, at most one trigger per hour, no daily limit. First real auto-cure: episode 5 (2026-10-21 01:08, recovered ~8 min after onset): docs/episodes/2026-10-21-episode-5.md.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
 - Episodes 2 (night, untreated, ended by itself after ~7.7 h) and 3 (midday, cured by hand; recovery already during the 0D hold): docs/episodes/2026-10-20-episodes-2-3.md.
 - The light probe (1 MB/min) is the only detector since 2026-10-20 15:27 (owner's decision; the 5 MB probe.sh stays as diagnostics only; Speedtest Tracker removed): episode = 3 samples in a row >= max(2 x baseline, 0.8 s), clear after 5 fast.
 - Episode 4 (evening, cured by hand; first live episode of the light-only detector, detected 4 min after onset): docs/episodes/2026-10-20-episode-4.md.
-- Episode tests (`agent/episode-tests.sh`: packet-size pings, MSS-limited downloads, ~21 MB) run on each trigger since 2026-10-20 ~20:40, plus a good-state reference at 04:10/16:10 and a pcap of the downloads since 2026-10-21; in live mode a `diag` is also saved after each cure. Metrics `u5g_eptest_*{kind}`, dashboard row "Episode tests". Not yet run during a real episode.
+- Episode tests (`agent/episode-tests.sh`: packet-size pings, MSS-limited downloads, ~21 MB) run on each trigger since 2026-10-20 ~20:40, plus a good-state reference at 04:10/16:10 and a pcap of the downloads since 2026-10-21; in live mode a `diag` is also saved after each cure. Metrics `u5g_eptest_*{kind}`, dashboard row "Episode tests". First run in an episode: episode 5 (smaller MSS does not help; ping loss grows with size towards both destinations).
 - Since 2026-10-21 a read-only radio snapshot every 5 min (dispatcher `radio-status`, `agent/radio-status.sh`, metrics `u5g_radio_*`, raw text `radio/<date>.txt`).
 - Planned: move the agent scripts off the TrueNAS host into a pinned Docker image (owner, 2026-10-20).
 - Open items: watch the first live episodes of the light-only detector (detection delay, false starts/clears; mild ~10 Mbit/s drops are an estimate); test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)

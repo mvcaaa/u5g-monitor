@@ -14,8 +14,7 @@ The baseline threshold (`LIGHT_K=2`, `LIGHT_FLOOR_SEC=0.8`, clear after 5) was c
 
 ## Episode tests
 `agent/episode-tests.sh` ran on TrueNAS (layout B) in the good state and in the Alpine agent image (downloads only; Docker Desktop fakes ICMP); the watchdog
-hook was tested with stubs (dry, live, `EPTEST=off`, default path). It has **not yet run during a real episode**; the same holds for the `diag` after a cure (stubs only). Packet capture and the reference mode ran live on TrueNAS (2026-10-21 00:03). Under a 1.5 Mbit/s episode each download
-takes ~27 s, so the whole run should take ~3.5 min - an estimate.
+hook was tested with stubs (dry, live, `EPTEST=off`, default path). It ran during a real episode for the first time on 2026-10-21 01:04 (3 min 25 s, pcap 1.8 MB), followed by the automatic cure and the `diag` after it (episode 5).
 
 ## Timing caveats
 - A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
@@ -30,5 +29,5 @@ takes ~27 s, so the whole run should take ~3.5 min - an estimate.
 
 ## Design limitations
 - Modem reboot wipes the dispatcher/key/:2222 listener (MODEM.md). Alert "modem unreachable" is the mitigation.
-- Auto-cure (live mode, on since 2026-10-20 21:00) has only been exercised with stubs; the first real automatic cure is still to come. Manual cures with the same `band-cycle.sh` worked in episodes 1, 3 and 4.
+- Auto-cure (live mode since 2026-10-20 21:00) worked once for real (episode 5, 2026-10-21 01:08, recovery ~8 min after onset). One success is not a statistic; the 170 s re-measure caveat below still applies.
 - The detector sees only DNA's server and only the time of 1 MB. The 5 MB diagnostic probe (DNA vs Cloudflare, loaded RTT, OFO) is noisy (e.g. DNA 28 vs 66 Mbit/s a few minutes apart in the good state) and no longer decides anything.

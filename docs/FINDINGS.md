@@ -69,6 +69,10 @@ makes the comparison invalid). Values at that time: LTE RSRP -81.8..-87.0 dBm (4
 | an intermediate position (~205°) | a third point to show the trend |
 Independent checks: the NR PCI of the phone's n28 leg (NetMonster) against CellMapper's NR cells; the operator's answer.
 
+Episode 5 (2026-10-21, [episodes/2026-10-21-episode-5.md](episodes/2026-10-21-episode-5.md)): the automatic cure restored speed with **identical** carriers, cell and
+signal (same NR cell re-added), reordering 7801 -> 0; a smaller MSS did not help (MTU explanation refuted); ping loss grew with packet size
+(0 -> 7-9 %) towards both DNA and Cloudflare, while Cloudflare's TCP still ran at ~56 Mbit/s.
+
 Tests that would confirm or refute M1 (only during an episode, with the owner's go-ahead): a short hold (`band-cycle.sh 20`); packet-size ping and
 reduced-MSS downloads (size-dependent loss on the NR leg); staying LTE-only (`0D`) for a longer period and checking that no episode occurs.
 
