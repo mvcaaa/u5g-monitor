@@ -47,6 +47,17 @@ reordering (PDCP split), destination dependence via the senders' congestion cont
 spontaneous start/end (the network can rebuild the SCG context in seconds, below our 1-minute sampling). Other UEs (indoor router, phone) being
 unaffected does not contradict it: the context is per UE. Whether those devices used n28 NSA is not known.
 
+**Refinement (M1-XS, 2026-10-21, inference): the NR leg probably comes from a different site than the LTE anchor.** Crowd-sourced data show n28
+only on the western site (its NR id is the LTE site id + 1 000 000), not on the serving LTE site to the SSE (see "Antenna orientation"). Our own
+numbers fit: the NR leg is clearly stronger than the LTE anchor (RSRP -67..-72 vs -82 dBm; SINR ~20 dB on ARFCN 152600 vs LTE 6-10 dB),
+which is what a western NR site in the antenna beam and an SSE LTE site ~115° off axis would give. With a non-co-located EN-DC the
+downlink for the NR leg crosses the operator's transport between the two sites (X2-U for the split bearer, or an S1-U path to a different
+site), a concrete place for the M1 fault, and dropping n28 (the cure) sends everything straight through the LTE site, so recovery is
+immediate. Unverified: the modem does not report the NR cell id/PCI in GSTATUS (`NR5G Cell ID: ---`), and CellMapper's band lists are incomplete.
+To check: the NR PCI of the serving n28 cell (if any AT query exposes it) against CellMapper's NR cells; whether NR RSRP drops and LTE RSRP rises
+when the antenna is turned towards the SSE site; whether episodes stop when the NR leg is gone. For the operator: ask whether n28 is served from
+the western site for this subscriber and whether the X2/transport between the two sites had changes on 2026-10-06.
+
 Tests that would confirm or refute M1 (only during an episode, with the owner's go-ahead): a short hold (`band-cycle.sh 20`); packet-size ping and
 reduced-MSS downloads (size-dependent loss on the NR leg); staying LTE-only (`0D`) for a longer period and checking that no episode occurs.
 
@@ -87,6 +98,6 @@ Host probe, good state (5 MB): DNA ≈ 66 Mbit/s, loaded RTT ≈ 47 ms avg / 95 
 
 ## Open questions (what the next episode should answer)
 1. ~~Does `diag` during an episode show anything different?~~ Answered by the first episode, see [episodes/2026-10-19-episode-1.md](episodes/2026-10-19-episode-1.md): clean ICMP/traceroute, stable radio, heavy TCP reordering (but it also returns after the cure and tracks carrier aggregation), LTE B1 flapping in both states; nothing on the modem side separates good from bad. DNA ~1 Mbit/s vs Cloudflare uneven.
-2. Does a shorter hold (20 s) or a lighter action (`AT+CGATT=0/1`) cure it? Do episodes occur at all in LTE-only (`0D`), and what capacity does LTE alone give?
+2. Does a shorter hold (20 s) or a lighter action (`AT+CGATT=0/1`) cure it? Do episodes occur at all in LTE-only (`0D`), and what capacity does LTE alone give? The owner would accept LTE-only permanently if it gives a steady ~300 Mbit/s (2026-10-21).
 3. Is the degradation specific to DNA's own servers/paths (nopeus) or to a set of destinations? Add a third probe target (Google/OVH) if needed.
 4. Evidence package for DNA: UniFi multi-day graph, Grafana panel of an episode with annotations, `diag` files, before/after table.
