@@ -1,5 +1,5 @@
 #!/bin/sh
-# u5g-dispatch: forced command for the TrueNAS watchdog key. Allowed: ping | diag | cure
+# u5g-dispatch: forced command for the TrueNAS watchdog key. Allowed: ping | diag | radio-status | cure
 CMD="$SSH_ORIGINAL_COMMAND"
 AT() { uiwwand-chat -t 5 "$1" 2>&1; }
 NS() { awk -v f="$2" -v k="$3" '$1==(f":"){if(!h){for(i=2;i<=NF;i++)n[i]=$i;h=1}else{for(i=2;i<=NF;i++)if(n[i]==k){print $i;exit}}}' "$1"; }
@@ -26,6 +26,15 @@ case "$CMD" in
     if command -v traceroute >/dev/null 2>&1; then
       echo "### traceroute nopeus.dna.fi"; traceroute -n -m 12 -w 2 nopeus.dna.fi 2>&1
     fi
+    echo "### done"
+    ;;
+  radio-status)
+    # read-only radio snapshot, no traffic: band profile, GSTATUS, LTE/NR info (unsupported queries just print ERROR)
+    echo "### radio-status $(date '+%F %T') uptime: $(cut -d' ' -f1 /proc/uptime)s"
+    echo "### BAND"; AT 'AT!BAND?' | head -1
+    echo "### GSTATUS"; AT 'AT!GSTATUS?'
+    echo "### LTEINFO"; AT 'AT!LTEINFO?'
+    echo "### NRINFO"; AT 'AT!NRINFO?'
     echo "### done"
     ;;
   cure)

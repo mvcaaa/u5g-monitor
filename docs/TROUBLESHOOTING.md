@@ -4,7 +4,7 @@
 |---|---|
 | `ssh -p 2222 … ping` → `Permission denied (publickey,password)`; dropbear log "Exit before auth … 0 fails" | You are on the wrong port, or :2222 dropbear is not running. Port 22 never reads `/etc/persistent/.ssh/authorized_keys`. Re-run `modem/install-modem.sh`; check `ps w \| grep [d]ropbear` on the modem. |
 | Same, port 2222, key is offered but rejected | `authorized_keys` line garbled (long pastes get split by some terminals) - re-run the installer instead of pasting; check `wc -l` and that the key text is on one line. |
-| ssh prints `denied` | That is the forced command rejecting a non-allowed command - expected for anything but `ping`, `diag`, `cure`. |
+| ssh prints `denied` | That is the forced command rejecting a non-allowed command - expected for anything but `ping`, `diag`, `radio-status`, `cure`. |
 | `/prometheus` returns "# no data available" | No speed test has run yet - trigger one manually. |
 | Blackbox targets show 0 / probe_success 0 for some IPs | Those hosts don't answer ICMP echo (172.20.47.3 and 62.78.100.208 didn't); remove them. `funet.fi` has no A record. Image tag must be `v0.29.0` (not `0.29.0`). |
 | Blackbox ICMP fails in the container | needs `cap_add: [NET_RAW]` (set in compose). |

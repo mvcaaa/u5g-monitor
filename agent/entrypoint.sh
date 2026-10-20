@@ -9,6 +9,7 @@ while true; do
   start=$(date +%s)
   /app/probe-light.sh >>/data/agent.log 2>&1
   [ $((i % 5)) -eq 0 ] && /app/probe.sh >>/data/agent.log 2>&1
+  [ $((i % 5)) -eq 2 ] && bash /app/radio-status.sh >>/data/agent.log 2>&1
   i=$((i + 1))
   /app/watchdog.sh >>/data/agent.log 2>&1
   # good-state reference of the episode tests at about 04:10 and 16:10 (skipped by the script during an episode)

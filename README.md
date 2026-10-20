@@ -17,7 +17,7 @@ Russian short version: [README.ru.md](README.ru.md)
 ## Safety model (read this)
 - Default mode is **dry-run**: episodes are detected and diagnosed, the modem is never changed.
   Switch with `echo live > data/mode` (and back with `echo dry > data/mode`); no restart needed.
-- The agent's SSH key on the modem is **restricted by a forced command**: it can only run `ping`, `diag`, `cure`.
+- The agent's SSH key on the modem is **restricted by a forced command**: it can only run `ping`, `diag`, `radio-status`, `cure`.
 - Cure rate limits: min 3 h between triggers, max 4 per day. No cure if the modem is unreachable.
 - The cure depends on a **custom band profile `0D`** that must already exist on the modem (not part of the stock set; definition and `modem/create-profile-0d.sh` in docs/MODEM.md).
   If it is missing, `cure` refuses to run and changes nothing; the scripts always return the modem to profile `00`.
@@ -27,7 +27,7 @@ Russian short version: [README.ru.md](README.ru.md)
 | Path | Purpose |
 |---|---|
 | `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, json-exporter, agent |
-| `agent/probe-light.sh`, `agent/probe.sh`, `agent/watchdog.sh`, `agent/episode-tests.sh`, `agent/entrypoint.sh` | probes and watchdog (run inside the `agent` container) |
+| `agent/probe-light.sh`, `agent/probe.sh`, `agent/watchdog.sh`, `agent/episode-tests.sh`, `agent/radio-status.sh`, `agent/entrypoint.sh` | probes and watchdog (run inside the `agent` container) |
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
 | `config/` | Prometheus, blackbox, json_exporter (template, key rendered by `scripts/init.sh`), Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |

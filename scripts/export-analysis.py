@@ -8,7 +8,7 @@ import argparse, base64, csv, datetime as dt, gzip, json, os, re, shutil, subpro
 
 METRICS = [r'u5g_.*', r'unpoller_device_(mbb|wan)_.*', r'unpoller_client_(receive|transmit)_rate_bytes', r'probe_success', r'probe_icmp_duration_seconds',
            r'node_textfile_mtime_seconds']
-FILES = ['watchdog.log', 'state/light.log', 'state/light-base.log', 'diag/']
+FILES = ['watchdog.log', 'state/light.log', 'state/light-base.log', 'diag/', 'radio/']
 
 
 def get(url, auth=None):
@@ -75,7 +75,7 @@ Exported {time.strftime('%F %T %Z')} for {a.start} .. {a.end} (local time), step
   (detector input), watchdog state = `u5g_watchdog_*`, episode/reference tests = `u5g_eptest_*{{kind}}`, radio = `unpoller_device_mbb_*`
   (cell/band in `unpoller_device_mbb_info` labels), carriers = `u5g_ca_*`, household traffic = `unpoller_device_wan_*` and per client `unpoller_client_*`.
 - `annotations.json`: Grafana annotations incl. manual notes (empty if no Grafana credentials were given).
-- `files/`: watchdog.log, light probe logs, diag/episode-*.txt (before cure), *-after.txt (after cure), *-tests.txt/.pcap, reference-*.
+- `files/`: watchdog.log, light probe logs, radio/<date>.txt (modem GSTATUS/LTEINFO/NRINFO every 5 min), diag/episode-*.txt (before cure), *-after.txt (after cure), *-tests.txt/.pcap, reference-*.
 - `docs/`: FINDINGS.md (hypotheses), episodes/, baselines/, METRICS.md (metric meanings), OPERATIONS.md.
 Private data (addresses, client names): keep local.
 """)

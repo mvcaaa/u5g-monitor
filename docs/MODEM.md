@@ -16,7 +16,7 @@
 ## What the repo installs on the modem (RAM-overlay of /etc/persistent, NOT flash)
 | File | Role |
 |---|---|
-| `/etc/persistent/u5g-dispatch.sh` | forced command: `ping` → pong, `diag` → diagnostic bundle (~1-2 min), `cure` → `nohup sh band-cycle.sh &`, anything else → `denied` |
+| `/etc/persistent/u5g-dispatch.sh` | forced command: `ping` → pong, `diag` → diagnostic bundle (~1-2 min), `radio-status` → read-only `AT!BAND?`, `AT!GSTATUS?`, `AT!LTEINFO?`, `AT!NRINFO?` (no traffic), `cure` → `nohup sh band-cycle.sh &`, anything else → `denied` |
 | `/etc/persistent/band-cycle.sh` | the cure (see below) |
 | line in `/etc/persistent/.ssh/authorized_keys` | `command="/etc/persistent/u5g-dispatch.sh",no-pty,no-port-forwarding,no-agent-forwarding ssh-ed25519 AAAA… u5g-watchdog` |
 | dropbear on :2222 | key auth for the above |

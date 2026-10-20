@@ -25,6 +25,12 @@ Retired on 2026-10-20: `u5g_watchdog_light_fresh`, `_light_episode_active`, `_li
 | `u5g_eptest_duration_seconds`, `u5g_eptest_last_run_timestamp_seconds` | | how long the tests took and when they ran |
 Values stay until the next run of the same kind. Reports: `data/diag/episode-<time>-tests.txt` / `reference-<time>-tests.txt`, packet headers of the downloads in the matching `.pcap`.
 
+## Written by `agent/radio-status.sh` (`data/textfile/u5g_radio.prom`, every 5 min, from the modem's `AT!GSTATUS?`)
+`u5g_radio_info{system_mode,lte_band,lte_rx_chan,nr_band,nr_rx_chan,cell_id,tac,rrc}` (1), `u5g_radio_rrc_connected`, `_endc` (0/1), `_temperature_celsius`, `_reset_counter`,
+`_lte_tx_power_dbm`, `_lte_sinr_db`, `_lte_rsrq_db`, `_lte_rsrp_dbm{rx=0..3}` (primary LTE cell per antenna), `_nr_tx_power_dbm` (-30 dBm or lower = uplink rides on LTE),
+`_nr_sinr_db`, `_nr_rsrp_dbm`, `_nr_rsrq_db`, `_ok` (0 = no answer), `_last_run_timestamp_seconds`. The full text incl. `AT!LTEINFO?` (neighbour cells, CA SCell)
+and `AT!NRINFO?` (NR RSSI per antenna, MIMO layers) is in `data/radio/<YYYYMMDD>.txt`.
+
 ## Other sources
 `probe_success`, `probe_icmp_duration_seconds{phase="rtt"}` (blackbox);
 `unpoller_*` (UniFi).

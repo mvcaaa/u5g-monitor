@@ -20,7 +20,7 @@
 2. **Prometheus textfile pattern.** `probe-light.sh`/`probe.sh`/`watchdog.sh` write `.prom` files atomically (tmp + rename) into
    `data/textfile`; node-exporter (textfile collector only, host collectors disabled) exposes them.
 3. **Forced-command SSH key.** The agent's key in the modem's `authorized_keys` has `command="/etc/persistent/u5g-dispatch.sh"`;
-   the dispatcher allows exactly `ping`, `diag`, `cure`. A stolen agent key cannot run arbitrary commands.
+   the dispatcher allows exactly `ping`, `diag`, `radio-status` (read-only AT queries), `cure`. A stolen agent key cannot run arbitrary commands.
 4. **Dedicated dropbear on port 2222.** The stock dropbear on :22 does not read `/etc/persistent/.ssh/authorized_keys`
    (OpenWrt build); a second instance started with `-D /etc/persistent/.ssh` does. It is started manually and does not survive a modem reboot.
 5. **Episode definition is destination-specific.** The "bad" state is NOT a radio collapse (see FINDINGS.md): the same radio

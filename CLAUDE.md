@@ -22,6 +22,7 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 - The light probe (1 MB/min) is the only detector since 2026-10-20 15:27 (owner's decision; the 5 MB probe.sh stays as diagnostics only; Speedtest Tracker removed): episode = 3 samples in a row >= max(2 x baseline, 0.8 s), clear after 5 fast.
 - Episode 4 (evening, cured by hand; first live episode of the light-only detector, detected 4 min after onset): docs/episodes/2026-10-20-episode-4.md.
 - Episode tests (`agent/episode-tests.sh`: packet-size pings, MSS-limited downloads, ~21 MB) run on each trigger since 2026-10-20 ~20:40, plus a good-state reference at 04:10/16:10 and a pcap of the downloads since 2026-10-21; in live mode a `diag` is also saved after each cure. Metrics `u5g_eptest_*{kind}`, dashboard row "Episode tests". Not yet run during a real episode.
-- Planned: move the agent scripts off the TrueNAS host into a pinned Docker image (owner, 2026-10-20); a read-only radio `status` command on the modem (needs the owner to widen the forced command).
+- Since 2026-10-21 a read-only radio snapshot every 5 min (dispatcher `radio-status`, `agent/radio-status.sh`, metrics `u5g_radio_*`, raw text `radio/<date>.txt`).
+- Planned: move the agent scripts off the TrueNAS host into a pinned Docker image (owner, 2026-10-20).
 - Open items: watch the first live episodes of the light-only detector (detection delay, false starts/clears; mild ~10 Mbit/s drops are an estimate); test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)
   only during an episode and with the owner's go-ahead; evidence package / message for the operator (the owner sends it himself).
