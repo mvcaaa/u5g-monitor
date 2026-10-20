@@ -115,7 +115,9 @@ services:
       MININT: ${WD_MIN_INTERVAL:-10800}
       MAXDAY: ${WD_MAX_PER_DAY:-4}
       LNEED: ${LIGHT_NEED:-3}
-      LSLOW: ${LIGHT_SLOW_SEC:-2}
+      LOUT: ${LIGHT_CLEAR:-5}
+      LK: ${LIGHT_K:-4}
+      LFLOOR: ${LIGHT_FLOOR_SEC:-1.5}
       LIGHT_SIZE: ${LIGHT_SIZE:-1000000}
     volumes:
       - ./agent:/app:ro

@@ -183,7 +183,7 @@ groups:
     noDataState: OK
     execErrState: Error
     annotations:
-      summary: The light probe (1 MB every minute) took 2 s or more three times in a row
+      summary: The light probe (1 MB every minute) was above its baseline threshold three times in a row
         (shadow mode is informational only, it triggers no diag or cure).
     labels:
       project: u5g

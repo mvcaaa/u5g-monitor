@@ -20,7 +20,7 @@ RULES = [
   ("U5G: episode detected (dry-run)", "increase(u5g_watchdog_dryrun_triggers_total[10m])", "0s", "OK",
    "Watchdog detected a slow-DNA episode in dry-run mode (no cure sent). diag saved on TrueNAS.", 700),
   ("U5G: light episode detected", "increase(u5g_watchdog_light_detections_total[10m])", "0s", "OK",
-   "The light probe (1 MB every minute) took 2 s or more three times in a row (shadow mode: informational only).", 700),
+   "The light probe (1 MB every minute) was above its baseline threshold three times in a row (shadow mode: informational only).", 700),
   ("U5G: modem unreachable by watchdog", "1 - u5g_watchdog_modem_reachable", "10m", "Alerting",
    "TrueNAS cannot reach the modem on ssh port 2222 (modem rebooted? dropbear on 2222 not running?). Auto-cure is blocked.", 900),
   ("U5G: probe is stale", "time() - u5g_probe_last_run_timestamp_seconds - 900", "5m", "Alerting",

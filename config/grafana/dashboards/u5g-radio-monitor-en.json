@@ -8,7 +8,7 @@
  ],
  "timezone": "browser",
  "schemaVersion": 39,
- "version": 5,
+ "version": 6,
  "refresh": "1m",
  "time": {
   "from": "now-24h",
@@ -1765,7 +1765,7 @@
    "id": 215,
    "type": "timeseries",
    "title": "Light probe: time to download 1 MB from DNA, s",
-   "description": "Judged by TIME, not speed (slow start). Good state 0.3-0.8 s; 2 s or more (red line) three times in a row = light episode. Slow state: ~6 s or timeout.",
+   "description": "Judged by TIME, not speed (slow start). Red dashed line = detection threshold, max(LK x baseline, LFLOOR) = max(4 x baseline, 1.5 s); baseline = median of good-state samples (~24 h). Light episode = 3 samples in a row above it, cleared after 5 in a row below. Slow state: 3.5-5 s (5 s = probe timeout).",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -1781,6 +1781,16 @@
      "refId": "A",
      "expr": "u5g_probe_light_time_seconds",
      "legendFormat": "1 MB"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_watchdog_light_threshold_seconds",
+     "legendFormat": "threshold"
+    },
+    {
+     "refId": "C",
+     "expr": "u5g_watchdog_light_baseline_seconds",
+     "legendFormat": "baseline"
     }
    ],
    "fieldConfig": {
@@ -1794,7 +1804,7 @@
       "showPoints": "always",
       "pointSize": 5,
       "thresholdsStyle": {
-       "mode": "line"
+       "mode": "off"
       }
      },
      "thresholds": {
@@ -1811,7 +1821,60 @@
       ]
      }
     },
-    "overrides": []
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "threshold"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       },
+       {
+        "id": "custom.showPoints",
+        "value": "never"
+       },
+       {
+        "id": "custom.lineStyle",
+        "value": {
+         "fill": "dash",
+         "dash": [
+          10,
+          10
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "baseline"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "blue"
+        }
+       },
+       {
+        "id": "custom.showPoints",
+        "value": "never"
+       },
+       {
+        "id": "custom.lineWidth",
+        "value": 1
+       }
+      ]
+     }
+    ]
    },
    "options": {
     "legend": {
@@ -1827,7 +1890,7 @@
    "id": 216,
    "type": "stat",
    "title": "Light episode",
-   "description": "1 = last 3 light probes took 2 s or more",
+   "description": "1 = light episode active: 3 light probes in a row above the baseline threshold, until 5 in a row below it",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"

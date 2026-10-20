@@ -10,7 +10,7 @@
 Not run: the compose `json-exporter` against the real controller (TLS, API key accepted).
 
 ## Light probe calibration
-The threshold (`LIGHT_SLOW_SEC=2`) is calibrated from 20 good-state samples only; the slow-state value (~6 s at 1.4 Mbit/s) is computed from the 5 MB probe, not measured with 1 MB. The shadow mode exists to confirm this on the next episode and to count false detections.
+The baseline threshold (`LIGHT_K=4`, `LIGHT_FLOOR_SEC=1.5`, clear after 5) was tuned by replaying ~19 h of history with two episodes (2026-10-20): the slow state is 3.5-5 s against a baseline of ~0.47 s, so any k from 3 to 6 separated them. That is a small sample; the shadow mode stays until more episodes and good days confirm it. A baseline learned during a long episode is excluded by design (only fast samples outside light episodes are learned), but an episode that starts before 30 baseline samples exist is judged against the 0.5 s default.
 
 ## Timing caveats
 - A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
