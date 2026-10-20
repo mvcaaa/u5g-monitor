@@ -31,6 +31,7 @@ Russian short version: [README.ru.md](README.ru.md)
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
 | `config/` | Prometheus, blackbox, json_exporter (template, key rendered by `scripts/init.sh`), Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |
+| `scripts/export-analysis.py` | read-only export of metrics, annotations, watchdog logs and diag files for an offline analysis (docs/OPERATIONS.md) |
 | `AGENTS.md` | rules, invariants and checklists for automated agents (**read first if you are one**) |
 | `docs/` | ARCHITECTURE, DEPLOY (agent runbook), TRUENAS, MODEM, OPERATIONS, FINDINGS, METRICS, KNOWN_GAPS, TROUBLESHOOTING, `episodes/` (recorded episodes) |
 

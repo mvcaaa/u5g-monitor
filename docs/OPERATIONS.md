@@ -78,6 +78,13 @@ Manual run: `docker compose exec agent env EPT_KIND=reference bash /app/episode-
 Healthy reference 2026-10-20 20:41: 0 % loss at every size, RTT 36-44 ms, DNA 53-55 Mbit/s (default MSS) and 27-30 (1200/1000).
 Docker Desktop on macOS answers ICMP itself (RTT < 1 ms): run the pings on a Linux host.
 
+## Offline analysis bundle
+For a deeper analysis (e.g. by an agent) export a time range into one local directory, so the analysis never touches the live system:
+`PROM=http://<prometheus> GRAFANA=http://<grafana> GRAFANA_USER=... GRAFANA_PASS=... python3 scripts/export-analysis.py --from 2026-10-18 --to 2026-10-25 --out ~/u5g-analysis --files <ssh-host>:<watchdog dir>`
+(Grafana and `--files` are optional). It writes `metrics/<name>.csv.gz` for the u5g, radio, WAN, per-client and blackbox metrics (60 s step),
+`annotations.json`, `files/` (watchdog.log, light probe logs, all diag/test reports and pcaps) and a copy of `docs/`; ~1.5 MB of metrics per day.
+The bundle contains addresses and client names: keep it out of git and do not share it.
+
 ## Updating dashboards/alerts in an existing (non-provisioned) Grafana
 `python3 scripts/import-dashboard-api.py config/grafana/dashboards/u5g-radio-monitor-en.json` (overwrites by uid, asks for the admin password) and `python3 scripts/setup-alerts-api.py` (creates only the missing rules).
 The stack's own Grafana picks both up from `config/grafana/` on restart.
