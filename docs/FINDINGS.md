@@ -95,7 +95,7 @@ DNA/Telia network 244-36) and the modem's own `AT!LTEINFO?` agree:
 - LTE B7 is broadcast by sites around but was never used by the modem (it has used B1, B3, B8 and NR n28 only); n78 is not deployed
   in the area (nearest traces ~35 km away).
 
-**Experiment:** keep the current direction for a day as baseline (radio snapshot every 5 min since 2026-10-21 00:15, reference tests
+**Experiment** ([experiments/antenna-turn.md](experiments/antenna-turn.md)): keep the current direction for a day as baseline (radio snapshot every 5 min since 2026-10-21 00:15, reference tests
 04:10/16:10), turn the antenna to ~150° (owner, needs a dry roof), compare a day after: RSRP/SINR LTE and NR, Tx power, neighbour
 cells, carriers in use (B7?), reference test speeds. Expected: better SINR and probably higher normal speed; **not** expected to stop
 the episodes (they are tied to the NR leg, not to the radio level). Mark the turn with a `note` annotation on the dashboard.
