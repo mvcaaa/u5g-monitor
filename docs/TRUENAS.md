@@ -14,7 +14,7 @@ and is documented so an operator can recognise it on the box.
    cd /mnt/Main/u5g-monitor && sudo ./scripts/init.sh    # edit .env, re-run (see DEPLOY.md)
    ```
 4. **Port conflicts:** if the old UI-managed apps (layout B) still run, they hold 30037/30104/30220/30910 etc. The compose stack
-   defaults to 3000/9090/8080 - set `GRAFANA_PORT`, `PROMETHEUS_PORT`, `SPEEDTEST_PORT` in `.env` to free ports, or stop the old apps first.
+   defaults to 3000/9090 - set `GRAFANA_PORT`, `PROMETHEUS_PORT` in `.env` to free ports, or stop the old apps first.
    Do not delete the old apps' datasets until the new stack has run for a while (history lives in their Prometheus volume).
 5. `sudo docker compose up -d`, then `sudo ./scripts/verify.sh`.
 6. Persistence: containers use `restart: unless-stopped`; Docker is started by TrueNAS on boot once an Apps pool is selected
@@ -33,16 +33,16 @@ Useful to know when you find it on the box; this repo supersedes it.
 |---|---|---|
 | Prometheus (container `ix-prometheus-prometheus-1`) | UI app; config `/mnt/.ix-apps/app_mounts/prometheus/config/prometheus.yml`; restart: `sudo docker restart ix-prometheus-prometheus-1` | 30104 |
 | Grafana | UI app | 30037 |
-| Speedtest Tracker | UI app, `SPEEDTEST_SCHEDULE=7 * * * *`, servers 14164,22669,14928 | 30220 |
+| Speedtest Tracker (stopped 2026-10-20, removed from the project) | UI app, kept stopped; no longer scraped | 30220 |
 | unpoller, blackbox (v0.29.0, `icmp` module), json_exporter (v0.8.0, config = `config/json_exporter/json_exporter.yml` with the key filled in) | UI apps | 9130, 9115, 7979 |
 | node-exporter with textfile collector | UI app, textfile dir mounted from `/mnt/Main/u5g-watchdog/textfile` | 30910 |
-| `probe.sh` (retired 2026-10-20) | cron job id 1 disabled, `textfile/u5g_probe.prom` removed | |
+| `probe.sh` (diagnostics only since 2026-10-20) | `/mnt/Main/u5g-watchdog/probe.sh`, TrueNAS cron job id 1, every 5 min | |
 | `probe-light.sh` | `/mnt/Main/u5g-watchdog/probe-light.sh`, cron job every minute (added 2026-10-19; the episode detector since 2026-10-20) | |
 | `watchdog.sh` + state | `/mnt/Main/u5g-watchdog/`, cron job id 2 (now `* * * * *`, was `2-59/5`), mode file `mode`; the old v1 copy is kept as `watchdog.sh.v1` | |
 | watchdog SSH key | `/mnt/Main/u5g-watchdog/id_u5g` | |
 Cron on TrueNAS must be created via UI or `midclt call cronjob.create '{...}'` (not `crontab -e`). In layout B the scripts used
 `D=/mnt/Main/u5g-watchdog`; in this repo they use `/data` inside the agent container (same file layout).
-**Installing/updating layout B from this repo:** `sudo MODEM_HOST=<ip> MODEM_USER=<user> bash scripts/truenas-layout-b-install.sh` (idempotent; copies `agent/*.sh` to `/mnt/Main/u5g-watchdog`, creates/updates the two cron jobs, disables the retired `u5g probe` job, starts in `dry`).
+**Installing/updating layout B from this repo:** `sudo MODEM_HOST=<ip> MODEM_USER=<user> bash scripts/truenas-layout-b-install.sh` (idempotent; copies `agent/*.sh` to `/mnt/Main/u5g-watchdog`, creates/updates the three cron jobs, starts in `dry`).
 **Modem side for layout B** (from the workstation with admin access to the modem): copy `/mnt/Main/u5g-watchdog/id_u5g.pub` (public key only) to the workstation and run `U5G_PUB=<that copy> bash modem/install-modem.sh <ssh_user>@<U5G_IP> [port]`.
 **Migrating B → A:** copy `id_u5g*` and `mode` into `data/`, stop all the cron jobs (probe, light probe, watchdog; `midclt call cronjob.update <id> '{"enabled":false}'`),
 then deploy A. Otherwise both would probe and could both trigger a cure.

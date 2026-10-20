@@ -5,10 +5,6 @@ cd "$(dirname "$0")/.."
 [ -f .env ] || { cp .env.example .env; echo "created .env - EDIT IT (U5G_IP, Telegram, UniFi, Grafana password), then re-run"; exit 0; }
 get() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'; }
 U5G_IP=$(get U5G_IP)
-if [ -z "$(get SPEEDTEST_APP_KEY)" ]; then
-  k="base64:$(openssl rand -base64 32)"
-  sed -i "s|^SPEEDTEST_APP_KEY=.*|SPEEDTEST_APP_KEY=$k|" .env; echo "generated SPEEDTEST_APP_KEY"
-fi
 mkdir -p data/textfile data/state data/diag
 [ -f data/mode ] || echo dry > data/mode
 if [ ! -f data/id_u5g ]; then

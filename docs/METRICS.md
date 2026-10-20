@@ -1,15 +1,24 @@
 # Metrics
 
+## Written by `agent/probe.sh` (`data/textfile/u5g_probe.prom`, every 5 min, diagnostics only - not used for detection)
+| Metric | Labels | Meaning |
+|---|---|---|
+| `u5g_probe_http_code` / `_bytes` / `_duration_seconds` | `target=dna\|cloudflare` | result of the 5 MB download |
+| `u5g_probe_download_bits_per_second` | `target` | single-stream speed. Good state ≈ 60-100 Mbit/s on 5 MB; episode: DNA ≈ 1-5 |
+| `u5g_probe_tcp_in_segments` / `_ofo_queued` / `_dsack_sent` | | receiver-side TCP counters during the DNA download (loss/reordering evidence; retransmits are counted at the sender, so for downloads use these) |
+| `u5g_probe_loaded_rtt_avg_seconds` / `_max_seconds` / `u5g_probe_loaded_loss_ratio` | | ping to nopeus.dna.fi *during* the download (bufferbloat / queueing) |
+| `u5g_probe_ping_rtt_avg_seconds`, `u5g_probe_ping_loss_ratio` | `size=56\|1472` | idle ping, small vs full-MTU packet with DF |
+| `u5g_public_ip_info` | `ip` | current public IPv4 (value 1) |
+| `u5g_probe_last_run_timestamp_seconds` | | freshness |
+
 ## Written by `agent/watchdog.sh` (`data/textfile/u5g_watchdog.prom`)
 `u5g_watchdog_episode_active` (0/1), `_detections_total` (episode starts), `_light_baseline_seconds` (median of good-state light times), `_light_threshold_seconds` (current detection threshold), `_light_baseline_samples`, `_live_mode` (0 dry / 1 live), `_modem_reachable` (0/1), `_cures_total`,
 `_dryrun_triggers_total`, `_last_cure_result` (-1 none, 0 failed, 1 ok), `_last_cure_timestamp_seconds`,
 `_triggers_today`, `_probe_fresh` (light probe sample younger than 10 min), `_last_run_timestamp_seconds`.
-Retired on 2026-10-20 with `agent/probe.sh` (5 MB DNA/Cloudflare probe): `u5g_probe_download_bits_per_second`, `u5g_probe_tcp_*`, `u5g_probe_loaded_*`, `u5g_probe_ping_*`,
-`u5g_public_ip_info`, `u5g_probe_last_run_timestamp_seconds`; also `u5g_watchdog_light_fresh`, `_light_episode_active`, `_light_primary`, `_light_detections_total`. Their history stays in Prometheus until retention drops it.
+Retired on 2026-10-20: `u5g_watchdog_light_fresh`, `_light_episode_active`, `_light_primary`, `_light_detections_total`. Their history stays in Prometheus until retention drops it.
 
 ## Other sources
-`speedtest_tracker_download_bits`, `speedtest_tracker_upload_bits`, `speedtest_tracker_*_ms` (labels incl. `scheduled`,
-so always aggregate with `max(...)`); `probe_success`, `probe_icmp_duration_seconds{phase="rtt"}` (blackbox);
+`probe_success`, `probe_icmp_duration_seconds{phase="rtt"}` (blackbox);
 `unpoller_*` (UniFi).
 
 ## From json_exporter (job `u5g_ca`, every minute, UniFi controller `stat/device`, the U5G entry `model=="UMBBE631"`)

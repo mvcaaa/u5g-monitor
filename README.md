@@ -7,8 +7,9 @@ cycling the modem band profile. Docker Compose stack; runs on any Docker host (a
 Russian short version: [README.ru.md](README.ru.md)
 
 ## What it does
-- Collects U5G radio/WAN metrics (unpoller), carrier aggregation (json_exporter), hourly speed tests (Speedtest Tracker), ICMP path metrics (blackbox).
-- Every minute a **light probe** downloads 1 MB from DNA's server (`nopeus.dna.fi`) and records the download time.
+- Collects U5G radio/WAN metrics (unpoller), carrier aggregation (json_exporter), ICMP path metrics (blackbox).
+- Every minute a **light probe** downloads 1 MB from DNA's server (`nopeus.dna.fi`) and records the download time. Every 5 min a **diagnostic probe** downloads 5 MB from DNA and Cloudflare
+  (speed, RTT under load, big-packet ping, receiver-side TCP out-of-order/DSACK counters, public IP); it is not used for detection.
 - The **watchdog** declares an *episode* when 3 light probes in a row take longer than twice the good-state baseline (median of ~24 h), then runs a read-only
   diagnostic bundle on the modem (`diag`) and - only in `live` mode - the cure (`cure`), re-measures, and records the result.
 - Grafana dashboards + Telegram alerts. Everything is provisioned from files; no manual UI work.
@@ -25,8 +26,8 @@ Russian short version: [README.ru.md](README.ru.md)
 ## Layout
 | Path | Purpose |
 |---|---|
-| `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, json-exporter, speedtest-tracker, agent |
-| `agent/probe-light.sh`, `agent/watchdog.sh`, `agent/entrypoint.sh` | probe and watchdog (run inside the `agent` container) |
+| `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, json-exporter, agent |
+| `agent/probe-light.sh`, `agent/probe.sh`, `agent/watchdog.sh`, `agent/entrypoint.sh` | probes and watchdog (run inside the `agent` container) |
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
 | `config/` | Prometheus, blackbox, json_exporter (template, key rendered by `scripts/init.sh`), Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |

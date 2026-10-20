@@ -13,12 +13,6 @@ scrape_configs:
     static_configs:
       - targets: ['unpoller:9130']
 
-  # Hourly speed tests (Speedtest Tracker exposes /prometheus; allowed IPs must include the docker subnet)
-  - job_name: speedtest_tracker
-    metrics_path: /prometheus
-    static_configs:
-      - targets: ['speedtest-tracker:80']
-
   # ICMP path monitoring: U5G local hop, DNA test server, public DNS
   - job_name: blackbox_icmp
     metrics_path: /probe

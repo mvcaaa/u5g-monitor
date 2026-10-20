@@ -6,11 +6,11 @@ P=http://localhost:$(get PROMETHEUS_PORT); P=${P%:}; [ "$P" = "http://localhost"
 G=http://localhost:$(get GRAFANA_PORT); [ "$G" = "http://localhost:" ] && G=http://localhost:3000
 fail=0; ok() { echo "PASS  $*"; }; bad() { echo "FAIL  $*"; fail=1; }
 
-for s in prometheus grafana blackbox node-exporter unpoller speedtest-tracker agent; do
+for s in prometheus grafana blackbox node-exporter unpoller json-exporter agent; do
   st=$(docker compose ps --format '{{.Service}} {{.State}}' 2>/dev/null | awk -v s=$s '$1==s{print $2}')
   [ "$st" = running ] && ok "container $s running" || bad "container $s state='$st'"
 done
-for j in prometheus unpoller speedtest_tracker blackbox_icmp node_textfile; do
+for j in prometheus unpoller u5g_ca blackbox_icmp node_textfile; do
   n=$(curl -s "$P/api/v1/targets?state=active" | grep -o "\"job\":\"$j\"[^}]*\"health\":\"up\"" | wc -l)
   [ "$n" -ge 1 ] && ok "prometheus target job=$j up ($n)" || bad "prometheus target job=$j not up (see docs/TROUBLESHOOTING.md)"
 done

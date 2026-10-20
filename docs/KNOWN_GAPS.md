@@ -19,11 +19,11 @@ The baseline threshold (`LIGHT_K=2`, `LIGHT_FLOOR_SEC=0.8`, clear after 5) was c
 
 ## Never executed end-to-end in the authoring environment (no Docker daemon there)
 - `docker compose up`, image pulls (tags `prom/prometheus:v3.5.0`, `grafana/grafana:12.1.0`, `prom/node-exporter:v1.9.1` are unverified - `docker compose pull` fails loudly if one is wrong; `blackbox-exporter:v0.29.0` was used live),
-  Grafana file provisioning of alert rules/contact point (live rules were created through the HTTP API, and the equivalent payloads worked), Speedtest Tracker env-based Prometheus integration (live: enabled in the UI).
+  Grafana file provisioning of alert rules/contact point (live rules were created through the HTTP API, and the equivalent payloads worked).
 - Validated only: YAML/JSON syntax, `docker compose config`, shell syntax, `init.sh` (with a stubbed `ssh-keygen`), watchdog decision logic with stubbed ssh/probe (dry and live paths) and replayed light-probe history, `setup`-time scripts earlier run live on TrueNAS (probe v3, watchdog, dispatcher, forced-command key).
 - `scripts/verify.sh` has never been run against a real stack.
 
 ## Design limitations
 - Modem reboot wipes the dispatcher/key/:2222 listener (MODEM.md). Alert "modem unreachable" is the mitigation.
 - Auto-cure has only been exercised in tests; the first real `live` cure is an open experiment. Keep dry-run until an episode has been observed.
-- The detector sees only DNA's server and only the time of 1 MB: no Cloudflare comparison, no loaded RTT/OFO counters, no public-IP record any more (the 5 MB probe was retired on 2026-10-20). For an episode's details use `diag` and the manual tests in OPERATIONS.md.
+- The detector sees only DNA's server and only the time of 1 MB. The 5 MB diagnostic probe (DNA vs Cloudflare, loaded RTT, OFO) is noisy (e.g. DNA 28 vs 66 Mbit/s a few minutes apart in the good state) and no longer decides anything.

@@ -18,7 +18,7 @@ Never paste secrets into chat logs, tickets or commits. `.env` and `data/` are g
 ./scripts/init.sh            # 1st run: creates .env and stops; edit it; 2nd run: generates secrets + key, renders Prometheus config
 ```
 Edit `.env`: `U5G_IP`, `GRAFANA_ADMIN_PASSWORD`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `UNIFI_URL`, `UNIFI_API_KEY`.
-Check: `ls data/id_u5g data/id_u5g.pub config/prometheus/prometheus.rendered.yml` all exist; `grep SPEEDTEST_APP_KEY .env` is non-empty.
+Check: `ls data/id_u5g data/id_u5g.pub config/prometheus/prometheus.rendered.yml` all exist; 
 
 ## 2. Install the restricted key and scripts on the modem
 ```bash
@@ -35,25 +35,19 @@ docker compose up -d
 ```
 The agent installs its packages on first start (needs internet, ~20 s). Wait ~3 min for the first probe+watchdog cycle.
 
-## 4. One-time manual steps in Speedtest Tracker (UI, `http://<host>:8080`)
-Default login for the linuxserver image is documented upstream (verify; typically `admin@example.com` / `password` - change it).
-Settings → Data Integration → Prometheus: must be **enabled** and allow the docker subnet (compose sets
-`PROMETHEUS_ENABLED`/`PROMETHEUS_ALLOWED_IPS`; if `/prometheus` returns 403 to Prometheus, add the container network's CIDR
-(`docker network inspect u5g_default`). Run one manual test so metrics exist (before the first test `/prometheus` says "# no data available").
-
-## 5. Verify
+## 4. Verify
 ```bash
 ./scripts/verify.sh          # exit 0 expected; FAIL lines tell which doc section to read
 docker compose logs agent --tail 30
 ```
 Then open Grafana (`http://<host>:3000`, folder **U5G**): dashboard "U5G Radio Monitor (EN)"; the Watchdog row
-should show Mode `dry-run`, Modem ssh `ok`, Episode `none`. Alerting → Alert rules: 8 rules in group `u5g`, all Normal.
+should show Mode `dry-run`, Modem ssh `ok`, Episode `none`. Alerting → Alert rules: 7 rules in group `u5g`, all Normal.
 Test Telegram: Alerting → Contact points → `telegram` → Test.
 
-## 6. Done criteria
+## 5. Done criteria
 `verify.sh` exit 0, Telegram test message received, `data/mode` contains `dry`. Report: what passed, the modem-reboot caveat
 (MODEM.md), and the known gaps (KNOWN_GAPS.md). Do not enable `live` without the owner's explicit approval after reviewing at least one dry-run episode.
 
 ## Rollback / removal
-`docker compose down` (add `-v` to delete Prometheus/Grafana/Speedtest data). Modem: remove the `u5g-watchdog` line from
+`docker compose down` (add `-v` to delete Prometheus/Grafana data). Modem: remove the `u5g-watchdog` line from
 `/etc/persistent/.ssh/authorized_keys`, delete `/etc/persistent/u5g-dispatch.sh`, `pkill -f 'dropbear.*-p 2222'`.

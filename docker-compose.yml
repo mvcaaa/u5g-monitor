@@ -75,27 +75,6 @@ services:
     volumes:
       - ./config/json_exporter/json_exporter.rendered.yml:/config/json_exporter.yml:ro
 
-  speedtest-tracker:
-    <<: *restart
-    image: lscr.io/linuxserver/speedtest-tracker:latest
-    environment:
-      PUID: "1000"
-      PGID: "1000"
-      TZ: ${TZ:-Europe/Helsinki}
-      APP_KEY: ${SPEEDTEST_APP_KEY:?run scripts/init.sh to generate SPEEDTEST_APP_KEY}
-      APP_URL: http://localhost:${SPEEDTEST_PORT:-8080}
-      DB_CONNECTION: sqlite
-      SPEEDTEST_SCHEDULE: ${SPEEDTEST_SCHEDULE:-7 * * * *}
-      SPEEDTEST_SERVERS: ${SPEEDTEST_SERVERS:-14164,22669,14928}
-      PRUNE_RESULTS_OLDER_THAN: "0"
-      # Prometheus integration; the docker subnet must be allowed (verify in UI: Settings -> Data Integration)
-      PROMETHEUS_ENABLED: "true"
-      PROMETHEUS_ALLOWED_IPS: ${SPEEDTEST_PROM_ALLOWED_IPS:-172.16.0.0/12,192.168.0.0/16,10.0.0.0/8}
-    volumes:
-      - speedtest-config:/config
-    ports:
-      - "${SPEEDTEST_PORT:-8080}:80"
-
   # probes + watchdog; the only component that talks to the modem (ssh, restricted key).
   # No image build needed (works as a TrueNAS Custom App too): stock alpine + scripts mounted read-only.
   agent:
@@ -129,4 +108,3 @@ services:
 volumes:
   prometheus-data:
   grafana-data:
-  speedtest-config:

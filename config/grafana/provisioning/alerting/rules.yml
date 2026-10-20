@@ -5,48 +5,6 @@ groups:
   folder: U5G
   interval: 1m
   rules:
-  - uid: u5g-speed-drop
-    title: Speed drop (Speedtest below 20 Mbit/s)
-    condition: C
-    for: 10m
-    noDataState: OK
-    execErrState: Error
-    annotations:
-      summary: Latest Speedtest Tracker download is below 20 Mbit/s.
-    labels:
-      project: u5g
-    data:
-    - refId: A
-      relativeTimeRange:
-        from: 3900
-        to: 0
-      datasourceUid: prometheus
-      model:
-        refId: A
-        expr: max(speedtest_tracker_download_bits)
-        instant: true
-        intervalMs: 1000
-        maxDataPoints: 43200
-    - refId: B
-      datasourceUid: __expr__
-      model:
-        refId: B
-        type: reduce
-        expression: A
-        reducer: last
-        settings:
-          mode: dropNN
-    - refId: C
-      datasourceUid: __expr__
-      model:
-        refId: C
-        type: threshold
-        expression: B
-        conditions:
-        - evaluator:
-            type: lt
-            params:
-            - 20000000
   - uid: u5g-cure-executed
     title: 'U5G: cure executed'
     condition: C
