@@ -18,5 +18,6 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 - Stack is deployed on the owner's TrueNAS in "layout B" (hand-built UI apps + cron, see docs/TRUENAS.md); the compose stack in this repo is the portable, tested-by-config-only version.
 - Watchdog `mode=dry` (never cures by itself), `light_mode=shadow` (light probe only measures and logs). Auto-cure was never exercised live.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
-- Open items: compare light vs heavy detection over the next episodes, then decide on `light_mode=primary`; test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)
+- Episodes 2 (night, untreated, ended by itself after ~7.7 h) and 3 (midday, cured by hand; recovery already during the 0D hold): docs/episodes/2026-10-20-episodes-2-3.md.
+- Open items: make the light probe the primary detector, but with a threshold relative to a good-state baseline instead of the fixed 2 s (it cleared falsely inside episode 2), then decide on `light_mode=primary`; test a shorter hold (`band-cycle.sh 20`) and lighter actions (`AT+CGATT`)
   only during an episode and with the owner's go-ahead; evidence package / message for the operator (the owner sends it himself).
