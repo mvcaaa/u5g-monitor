@@ -8,7 +8,7 @@
  ],
  "timezone": "browser",
  "schemaVersion": 39,
- "version": 8,
+ "version": 9,
  "refresh": "1m",
  "time": {
   "from": "now-24h",
@@ -1876,10 +1876,10 @@
     },
     "enable": true,
     "iconColor": "purple",
-    "expr": "u5g_public_ip_info unless u5g_public_ip_info offset 5m",
+    "expr": "(u5g_public_ip_info unless on(ip) last_over_time(u5g_public_ip_info[6h] offset 1m)) and on() (count(last_over_time(u5g_public_ip_info[6h] offset 1m)) > 0)",
     "step": "60s",
     "titleFormat": "Public IP changed",
-    "textFormat": "{{ip}}"
+    "textFormat": "New public IP {{ip}} (not seen in the previous 6 h)"
    }
   ]
  }
