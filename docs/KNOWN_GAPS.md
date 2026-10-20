@@ -12,6 +12,11 @@ Not run: the compose `json-exporter` against the real controller (TLS, API key a
 ## Light probe calibration
 The baseline threshold (`LIGHT_K=2`, `LIGHT_FLOOR_SEC=0.8`, clear after 5) was chosen from ~19 h of history with two severe episodes (2026-10-20): they are 3.5-5 s against a baseline of ~0.47 s, and in ~9 h of good state no threshold of 0.8 s or more was exceeded 3 times in a row. Detection of mild drops (~10 Mbit/s) is an estimate; no mild episode is in the data yet. That is a small sample; the shadow mode stays until more episodes and good days confirm it. A baseline learned during a long episode is excluded by design (only fast samples outside light episodes are learned), but an episode that starts before 30 baseline samples exist is judged against the 0.5 s default.
 
+## Episode tests
+`agent/episode-tests.sh` ran on TrueNAS (layout B) in the good state and in the Alpine agent image (downloads only; Docker Desktop fakes ICMP); the watchdog
+hook was tested with stubs (dry, live, `EPTEST=off`, default path). It has **not yet run during a real episode**. Under a 1.5 Mbit/s episode each download
+takes ~27 s, so the whole run should take ~3.5 min - an estimate.
+
 ## Timing caveats
 - A cure takes >= 120 s (the hold in `band-cycle.sh`) plus re-registration on `00`, but the watchdog re-measures **170 s** after sending it (`WAITAFTER`): only ~50 s after `00` is set.
   A "cure did not help" result right after a cure may be a false negative - check the dashboard a few minutes later before concluding. Not changed yet (owner decision: keep waiting times as they are). Data point from episode 1: the first good probe came 90 s after `00` was restored (the re-measure at 170 s would have run ~49 s after `00` - untested whether that is already enough).

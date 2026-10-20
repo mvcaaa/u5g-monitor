@@ -8,7 +8,7 @@ MODEM_USER=${MODEM_USER:-admin}; MODEM_SSH_PORT=${MODEM_SSH_PORT:-2222}; D=${D:-
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 mkdir -p "$D/state" "$D/diag" "$D/textfile"
 [ -f "$D/watchdog.sh" ] && [ ! -f "$D/watchdog.sh.v1" ] && ! cmp -s "$HERE/agent/watchdog.sh" "$D/watchdog.sh" && cp -p "$D/watchdog.sh" "$D/watchdog.sh.v1"
-for f in probe.sh probe-light.sh watchdog.sh; do install -m 755 "$HERE/agent/$f" "$D/$f"; done
+for f in probe.sh probe-light.sh watchdog.sh episode-tests.sh; do install -m 755 "$HERE/agent/$f" "$D/$f"; done
 [ -f "$D/mode" ] || echo dry > "$D/mode"
 ENVS="env D=$D DIR=$D MODEM_HOST=$MODEM_HOST MODEM_USER=$MODEM_USER MODEM_SSH_PORT=$MODEM_SSH_PORT"
 job() { # script minute-field description

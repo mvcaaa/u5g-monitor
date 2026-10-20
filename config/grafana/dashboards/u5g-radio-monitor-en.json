@@ -8,7 +8,7 @@
  ],
  "timezone": "browser",
  "schemaVersion": 39,
- "version": 12,
+ "version": 13,
  "refresh": "1m",
  "time": {
   "from": "now-24h",
@@ -1825,6 +1825,463 @@
     "graphMode": "none",
     "textMode": "auto"
    }
+  },
+  {
+   "id": 220,
+   "type": "row",
+   "title": "Episode tests (run by the watchdog once per triggered episode, before any cure)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 103
+   }
+  },
+  {
+   "id": 221,
+   "type": "table",
+   "title": "Ping loss by packet size (latest test)",
+   "description": "100 DF pings per size to DNA and Cloudflare. Loss that grows with size only towards DNA would point at an MTU/fragmentation problem on the operator's path.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 0,
+    "y": 104
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "max by (target, size) (u5g_eptest_ping_loss_ratio)",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "groupingToMatrix",
+     "options": {
+      "columnField": "target",
+      "rowField": "size",
+      "valueField": "Value"
+     }
+    },
+    {
+     "id": "convertFieldType",
+     "options": {
+      "conversions": [
+       {
+        "targetField": "size\\target",
+        "destinationType": "number"
+       }
+      ]
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "size\\target"
+       }
+      ]
+     }
+    },
+    {
+     "id": "organize",
+     "options": {
+      "renameByName": {
+       "size\\target": "size, B"
+      }
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "decimals": 0,
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "size, B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "none"
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       },
+       {
+        "id": "custom.width",
+        "value": 70
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   }
+  },
+  {
+   "id": 222,
+   "type": "table",
+   "title": "Ping RTT by packet size (latest test)",
+   "description": "Average RTT of the same pings",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 12,
+    "y": 104
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "max by (target, size) (u5g_eptest_ping_rtt_avg_seconds)",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "groupingToMatrix",
+     "options": {
+      "columnField": "target",
+      "rowField": "size",
+      "valueField": "Value"
+     }
+    },
+    {
+     "id": "convertFieldType",
+     "options": {
+      "conversions": [
+       {
+        "targetField": "size\\target",
+        "destinationType": "number"
+       }
+      ]
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "size\\target"
+       }
+      ]
+     }
+    },
+    {
+     "id": "organize",
+     "options": {
+      "renameByName": {
+       "size\\target": "size, B"
+      }
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "decimals": 3,
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "size, B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "none"
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       },
+       {
+        "id": "custom.width",
+        "value": 70
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   }
+  },
+  {
+   "id": 223,
+   "type": "table",
+   "title": "DNA 5 MB download by MSS (latest test)",
+   "description": "Same download with the default MSS, 1200, 1000 and the default again (runs 1-4). If a smaller MSS restores speed during an episode, large segments are being lost or delayed on the path. rcv MSS = segment size the receiver actually saw.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 16,
+    "x": 0,
+    "y": 111
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "max by (run, mss) (u5g_eptest_download_bits_per_second)",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "refId": "B",
+     "expr": "max by (run, mss) (u5g_eptest_download_rcv_mss_bytes)",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "refId": "C",
+     "expr": "max by (run, mss) (u5g_eptest_download_http_code)",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      },
+      "indexByName": {
+       "run": 0,
+       "mss": 1,
+       "Value #A": 2,
+       "Value #B": 3,
+       "Value #C": 4
+      },
+      "renameByName": {
+       "run": "run",
+       "mss": "MSS requested",
+       "Value #A": "speed",
+       "Value #B": "rcv MSS, B",
+       "Value #C": "HTTP"
+      }
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "run"
+       }
+      ]
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "speed"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bps"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "rcv MSS, B"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "none"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "HTTP"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "none"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "run"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 45
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "MSS requested"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 110
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   }
+  },
+  {
+   "id": 224,
+   "type": "stat",
+   "title": "Latest episode test",
+   "description": "When the tests last ran (a manual run counts too) and how long they took; the full text report is diag/episode-*-tests.txt",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 16,
+    "y": 111
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "u5g_eptest_last_run_timestamp_seconds * 1000",
+     "instant": true,
+     "legendFormat": "ran"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_eptest_duration_seconds",
+     "instant": true,
+     "legendFormat": "took"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "dateTimeFromNow",
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "blue",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "took"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "s"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "orientation": "vertical"
+   }
   }
  ],
  "id": null,
@@ -1923,6 +2380,19 @@
     "step": "60s",
     "titleFormat": "Episode end",
     "textFormat": "Light probe below the threshold 5 times in a row"
+   },
+   {
+    "name": "Episode tests",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "enable": true,
+    "iconColor": "purple",
+    "expr": "(u5g_eptest_last_run_timestamp_seconds > u5g_eptest_last_run_timestamp_seconds offset 1m) or (u5g_eptest_last_run_timestamp_seconds unless u5g_eptest_last_run_timestamp_seconds offset 1m)",
+    "step": "60s",
+    "titleFormat": "Episode tests done",
+    "textFormat": "Results: row \"Episode tests\"; report diag/episode-*-tests.txt"
    }
   ]
  },

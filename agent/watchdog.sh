@@ -11,6 +11,7 @@ MAXDAY=${MAXDAY:-4}         # max triggers per day
 WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring (the modem cycle itself holds 0D for 120 s, see docs/KNOWN_GAPS.md)
 SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
 PROBE=${PROBE:-$D/probe-light.sh}
+EPTEST=${EPTEST:-$(dirname "$0")/episode-tests.sh} # run once per trigger, before any cure (~21 MB, 2-6 min); "off" disables
 LNEED=${LNEED:-3}           # consecutive slow samples (1 per minute) to detect
 LOUT=${LOUT:-5}             # consecutive fast samples to clear
 LK=${LK:-2}                 # slow = time >= max(LK x baseline, LFLOOR); 2 x ~0.47 s catches ~10 Mbit/s and below
@@ -81,6 +82,10 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && [ "$DAY_COUNT" 
     f="$D/diag/episode-$(date +%Y%m%d-%H%M).txt"
     log "EPISODE: running diag -> $f"
     timeout 220 $SSHC diag > "$f" 2>&1
+    if [ "$EPTEST" != off ] && [ -f "$EPTEST" ]; then
+      log "EPISODE: running tests -> ${f%.txt}-tests.txt"
+      D="$D" timeout 420 bash "$EPTEST" > "${f%.txt}-tests.txt" 2>&1
+    fi
     if [ "$MODE" = live ]; then
       CURES_TOTAL=$((CURES_TOTAL + 1)); LAST_CURE_TS=$(date +%s)
       log "CURE: sending cure, waiting ${WAITAFTER}s"

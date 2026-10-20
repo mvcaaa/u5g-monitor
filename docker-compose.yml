@@ -80,7 +80,7 @@ services:
   agent:
     <<: *restart
     image: alpine:3.20
-    entrypoint: ["/bin/sh", "-c", "apk add --no-cache bash curl openssh-client iputils gawk util-linux coreutils tzdata >/dev/null && exec /app/entrypoint.sh"]
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache bash curl openssh-client iputils gawk util-linux coreutils tzdata python3 >/dev/null && exec /app/entrypoint.sh"]
     environment:
       TZ: ${TZ:-Europe/Helsinki}
       D: /data

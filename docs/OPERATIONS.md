@@ -5,7 +5,7 @@
 - Hovering one graph shows the crosshair on all of them (shared crosshair). Manual notes (Ctrl/Cmd+click on a graph) appear only on that panel unless
   tagged `note`: the annotation query "Notes (all panels)" shows `note`-tagged annotations on every panel.
 - Annotations on every panel: "Episode start" (red) / "Episode end" (green) from the watchdog, "Watchdog trigger (dry-run)", "Cure executed",
-  "Public IP change". Use them on the WAN traffic panel to see what load preceded an episode.
+  "Public IP change", "Episode tests" (purple, the tests finished). Use them on the WAN traffic panel to see what load preceded an episode.
 - Agent logs: `docker compose logs agent --tail 50` and `data/agent.log`; watchdog events: `data/watchdog.log`; per-episode diagnostics: `data/diag/episode-*.txt`.
 
 ## Mode switch (no restart)
@@ -25,7 +25,7 @@ $SSH cure                          # starts the band cycle in the background (ho
 
 ## Episode playbook
 1. Telegram: "episode started", then "episode detected (dry-run)" (or "cure executed" in live mode).
-2. Read `data/watchdog.log` and the newest `data/diag/episode-*.txt`. Compare with `docs/baselines/` (good-state reference): DNA vs Cloudflare speed,
+2. Read `data/watchdog.log`, the newest `data/diag/episode-*.txt` and its `*-tests.txt` (also the dashboard row "Episode tests"). Compare with `docs/baselines/` (good-state reference): DNA vs Cloudflare speed,
    `delta ... ofo/dsack`, traceroute, `AT!GSTATUS?` cell/bands.
 3. Before curing manually run extra tests worth keeping for the DNA case (the host probe history is in Prometheus already): `ssh <ssh_user>@<U5G_IP> 'sh -s' < modem/ofo-test.sh` (admin login, read-only, ~1 min) gives speed and TCP out-of-order counters per destination (DNA / Cloudflare / DNA). Run it again after the cure for a before/after pair.
 4. Cure (manual or auto), confirm recovery in the dashboard within ~3 min; note the cell/band change in GSTATUS.
@@ -64,6 +64,15 @@ after 5 in a row below; failed samples (non-200) neither count nor clear. In ~9 
 3 times in a row. Replayed on that history it detects 2-3 minutes after onset (the 5 MB probe, the former detector: 7-15) with no false clears; see
 `docs/episodes/2026-10-20-episodes-2-3.md`. The dashboard panel shows the probe time with the baseline and threshold lines.
 Mild drops of ~12-14 Mbit/s look like the slow tail of the good state and are not detected (the 5 MB diagnostic probe shows them on the dashboard, but no alert watches it).
+
+## Episode tests
+On each trigger (after `diag`, before a cure in live mode) the watchdog runs `agent/episode-tests.sh`: 100 DF pings per size (56/1000/1200/1400/1472 B)
+to DNA and Cloudflare in parallel, then four 5 MB downloads from DNA with MSS default/1200/1000/default. They tell an MTU/fragmentation problem
+(loss grows with size, smaller MSS restores speed) from a general downlink problem (all sizes and MSS equally slow). ~21 MB, ~2 min in the good state,
+up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. `EPTEST=off` disables them.
+Manual run (e.g. a reference in the good state): `docker compose exec agent bash /app/episode-tests.sh` (layout B: `sudo D=/mnt/Main/u5g-watchdog bash /mnt/Main/u5g-watchdog/episode-tests.sh`).
+Healthy reference 2026-10-20 20:41: 0 % loss at every size, RTT 36-44 ms, DNA 53-55 Mbit/s (default MSS) and 27-30 (1200/1000).
+Docker Desktop on macOS answers ICMP itself (RTT < 1 ms): run the pings on a Linux host.
 
 ## Updating dashboards/alerts in an existing (non-provisioned) Grafana
 `python3 scripts/import-dashboard-api.py config/grafana/dashboards/u5g-radio-monitor-en.json` (overwrites by uid, asks for the admin password) and `python3 scripts/setup-alerts-api.py` (creates only the missing rules).
