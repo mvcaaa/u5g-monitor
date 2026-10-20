@@ -57,6 +57,8 @@ but bursts >= 30 Mbit/s happened 51 times in ~26 h. A deliberate test did **not*
 Cloudflare's 429 rate limit after ~1.7 GB). Short bursts are therefore not a reliable trigger; long mixed-destination load is still open.
 During episodes the household WAN traffic still reached 40-65 Mbit/s aggregate while DNA's light probe stayed at ~1.5 Mbit/s: capacity is there,
 only some flows suffer.
+Episode 4 (18:57) started with **no** load at all (household download 1-4 Mbit/s for the 15 minutes before), so load is at most one of several
+triggers ([episodes/2026-10-20-episode-4.md](episodes/2026-10-20-episode-4.md)).
 
 ## Traceroute (good state) to nopeus.dna.fi
 `172.20.47.1` → `172.20.47.2/.0/.3` → `62.197.175.66` → `62.197.175.67` (destination), ~35 ms; hops 1-2 are CGNAT-internal. Compare with an episode's `diag`.
