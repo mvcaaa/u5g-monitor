@@ -60,6 +60,24 @@ only some flows suffer.
 Episode 4 (18:57) started with **no** load at all (household download 1-4 Mbit/s for the 15 minutes before), so load is at most one of several
 triggers ([episodes/2026-10-20-episode-4.md](episodes/2026-10-20-episode-4.md)).
 
+## Antenna orientation (2026-10-21)
+The operator wrote (2026-10-15) that its nearest sites are south and west of the house. Crowd-sourced site data (CellMapper, shared
+DNA/Telia network 244-36) and the modem's own `AT!LTEINFO?` agree:
+- **Serving site** (cells A and B, PCI 23; LTE B1+B3, NR n28): a few hundred metres **SSE (~150°)** of the house; the PCI 23 sector
+  points roughly at the house (within ~15° of its boresight).
+- **Second site** (PCI 258, LTE B3/B7/B8, no B1): **west (~265°)**, about twice as far; seen as a neighbour at -89 dBm vs -82/-83 dBm
+  for the serving cell.
+- The modem's antenna faces **west**, i.e. at the farther site, while it is served by the nearer one ~115° off its axis. That fits
+  the mediocre SINR (LTE 6-10 dB, NR 2.7 dB after the 2026-10-20 cure) with good RSRP: the serving signal arrives off-axis and the
+  western site is in the beam. Inference from geometry; site positions on CellMapper are approximate.
+- LTE B7 is broadcast by sites around but was never used by the modem (it has used B1, B3, B8 and NR n28 only); n78 is not deployed
+  in the area (nearest traces ~35 km away).
+
+**Experiment:** keep the current direction for a day as baseline (radio snapshot every 5 min since 2026-10-21 00:15, reference tests
+04:10/16:10), turn the antenna to ~150° (owner, needs a dry roof), compare a day after: RSRP/SINR LTE and NR, Tx power, neighbour
+cells, carriers in use (B7?), reference test speeds. Expected: better SINR and probably higher normal speed; **not** expected to stop
+the episodes (they are tied to the NR leg, not to the radio level). Mark the turn with a `note` annotation on the dashboard.
+
 ## Traceroute (good state) to nopeus.dna.fi
 `172.20.47.1` → `172.20.47.2/.0/.3` → `62.197.175.66` → `62.197.175.67` (destination), ~35 ms; hops 1-2 are CGNAT-internal. Compare with an episode's `diag`.
 
