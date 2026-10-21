@@ -22,6 +22,15 @@ Hypothesis: path/destination-dependent degradation tied to the session/bearer/co
 than a detach; modem uptime was 5.6 days, reset counter 1 - there was no real outage). Root cause on DNA's side is **unknown**.
 Recovery does not always hold: the multi-day UniFi speed graphs show relapses after manual cures.
 
+## Episodes are periodic: every ~6 h 04 min (2026-10-21)
+All onsets since 2026-10-20 lie on one grid with a period of ~6 h 04 min (00:47, [06:51 inside episode 2], 12:55, 18:58, 01:02, 07:06,
+13:10, 19:14), and episode 1 (19.10 ~18:48) fits within the old probe's accuracy. Cures (manual or automatic) do **not** shift it: the next
+onset follows the previous onset, not the cure. Not the UniFi speed test (daily 05:07), not household load (0-45 Mbit/s before onsets),
+no re-attach, any carrier/cell. A clock outside our control - most likely a periodic job on the operator side, possibly a modem
+firmware task. During every episode ~76 % of received TCP segments arrive out of order (exactly 0 after the cure): the split bearer's
+delivery order breaks. Details and the pre-registered prediction of the next onsets: [episodes/2026-10-21-day.md](episodes/2026-10-21-day.md).
+This also retires "load as a trigger" (below) for good: episodes 6-8 started with ~0-5 Mbit/s of household traffic.
+
 ## What the cure actually changes (2026-10-20, from Prometheus/UniFi data around 3 episodes and 2 cures)
 The modem runs **EN-DC (5G NSA)**: LTE anchor (B3, with B1 as a flapping LTE secondary) plus NR n28 (10 MHz) as the secondary cell group (SCG).
 Profile `0D` differs from `00` **only** in the NR-NSA mask (n28 removed), so the cure is "drop the NR leg for 120 s, then allow it again".
