@@ -28,7 +28,8 @@ All onsets since 2026-10-20 lie on one grid with a period of ~6 h 04 min (00:47,
 onset follows the previous onset, not the cure. Not the UniFi speed test (daily 05:07), not household load (0-45 Mbit/s before onsets),
 no re-attach, any carrier/cell. A clock outside our control - most likely a periodic job on the operator side, possibly a modem
 firmware task. During every episode ~76 % of received TCP segments arrive out of order (exactly 0 after the cure): the split bearer's
-delivery order breaks. Details and the pre-registered prediction of the next onsets: [episodes/2026-10-21-day.md](episodes/2026-10-21-day.md).
+delivery order breaks. Details and the pre-registered prediction of the next onsets: [episodes/2026-10-21-day.md](episodes/2026-10-21-day.md); the prediction for 22.10
+hit 4 of 4 within 1 min (mean period 6 h 03.8 min over 11 periods): [episodes/2026-10-22-day.md](episodes/2026-10-22-day.md).
 This also retires "load as a trigger" (below) for good: episodes 6-8 started with ~0-5 Mbit/s of household traffic.
 
 ## What the cure actually changes (2026-10-20, from Prometheus/UniFi data around 3 episodes and 2 cures)
