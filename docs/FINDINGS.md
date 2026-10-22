@@ -32,6 +32,18 @@ delivery order breaks. Details and the pre-registered prediction of the next ons
 hit 4 of 4 within 1 min (mean period 6 h 03.8 min over 11 periods): [episodes/2026-10-22-day.md](episodes/2026-10-22-day.md).
 This also retires "load as a trigger" (below) for good: episodes 6-8 started with ~0-5 Mbit/s of household traffic.
 
+## Second-SIM test: pre-registered prediction (written 2026-10-22, before the test)
+Procedure: [experiments/second-sim.md](experiments/second-sim.md). A second DNA subscription (prepaid, unlimited data) in the modem's
+slot 2; same modem, antenna, sites and monitoring. Each slot switch is a new attach. Expected onsets on the current grid:
+2026-10-23 01:33, 07:37, 13:41, 19:45, then +6 h 04 min each (+/- 5 min).
+| Observation with the second SIM (1-2 days) | Conclusion |
+|---|---|
+| episodes on the **old grid** | not the subscription: a clock at the sites/transport, common to subscribers |
+| episodes on a **new grid** = switch time + n x 6 h 04 min | a network-side timer started at attach for any subscriber (session/charging/policy refresh), not a per-account setting |
+| **no episodes** in 1-2 days (4-8 expected onsets) | tied to **this subscription** (profile/QoS/policy or its session); the modem is fine |
+| episodes at other, irregular times | none of the above; re-think |
+The old-grid / new-grid distinction also applies to the switch back to slot 1 (the contract SIM's session restarts too).
+
 ## What the cure actually changes (2026-10-20, from Prometheus/UniFi data around 3 episodes and 2 cures)
 The modem runs **EN-DC (5G NSA)**: LTE anchor (B3, with B1 as a flapping LTE secondary) plus NR n28 (10 MHz) as the secondary cell group (SCG).
 Profile `0D` differs from `00` **only** in the NR-NSA mask (n28 removed), so the cure is "drop the NR leg for 120 s, then allow it again".
