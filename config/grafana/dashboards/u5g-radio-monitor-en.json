@@ -808,7 +808,8 @@
   {
    "id": 17,
    "type": "timeseries",
-   "title": "WAN latency (gateway)",
+   "title": "WAN latency (ICMP to DNA and 1.1.1.1)",
+   "description": "Round-trip time measured by blackbox every 15 s through the U5G. Replaces the gateway's uplink latency, which UniFi updates only during a short morning window and then holds all day.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -822,8 +823,13 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "max by (name) (unpoller_device_uplink_latency_seconds{name=\"UXG Max\"})",
-     "legendFormat": "latency"
+     "expr": "probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"nopeus.dna.fi\"}",
+     "legendFormat": "DNA (nopeus.dna.fi)"
+    },
+    {
+     "refId": "B",
+     "expr": "probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"1.1.1.1\"}",
+     "legendFormat": "1.1.1.1"
     }
    ],
    "fieldConfig": {
