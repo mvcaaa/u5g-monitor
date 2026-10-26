@@ -14,6 +14,8 @@ PROBE=${PROBE:-$D/probe-light.sh}
 EPTEST=${EPTEST:-$(dirname "$0")/episode-tests.sh} # run once per trigger, before any cure (~21 MB, 2-6 min); "off" disables
 LNEED=${LNEED:-3}           # consecutive slow samples (1 per minute) to detect
 LOUT=${LOUT:-5}             # consecutive fast samples to clear
+LOOO=${LOOO:-0}             # fast detection: ONE slow sample with >= LOOO out-of-order packets (light.log column 5) starts an episode; 0 = off
+LOOOSH=${LOOOSH:-2}         # with LOOO=0: log such samples as "SHADOW" only, to evaluate the fast rule
 LK=${LK:-2}                 # slow = time >= max(LK x baseline, LFLOOR); 2 x ~0.47 s catches ~10 Mbit/s and below
 LFLOOR=${LFLOOR:-0.8}       # threshold floor (s); good state p50 0.47 s / p98 1.07 s, severe episode 3.5-5 s (capped by LIGHT_MAXT)
 LBMIN=${LBMIN:-30}          # baseline: samples needed before it replaces LBDEF
@@ -27,11 +29,11 @@ log() { echo "$(date '+%F %T') [$MODE] $*" >> "$LOG"; }
 now=$(date +%s)
 
 LAST_TRIGGER=0; CURES_TOTAL=0; DRY_TOTAL=0; DAY=$(date +%F); DAY_COUNT=0; LAST_RESULT=-1; LAST_CURE_TS=0
-LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0
+LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0
 [ -f "$SE" ] && . "$SE"
 save() {
-  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\n' \
-    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" > "$SE.tmp" && mv "$SE.tmp" "$SE"
+  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\n' \
+    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" > "$SE.tmp" && mv "$SE.tmp" "$SE"
 }
 
 [ "$DAY" != "$(date +%F)" ] && { DAY=$(date +%F); DAY_COUNT=0; }
@@ -51,12 +53,16 @@ ep=$LIGHT_ACTIVE; fresh=0; lt=0; reach=-1
 if [ -s "$LL" ]; then
   lts=$(tail -n 1 "$LL" | awk '{print $1}'); lt=$(tail -n 1 "$LL" | awk '{print $2}')
   [ $((now - lts)) -lt 600 ] && fresh=1
-  # trailing runs over recent HTTP-200 samples: "<slow_run> <fast_run> <samples>"
+  # trailing runs over recent HTTP-200 samples: "<slow_run> <fast_run> <samples> <out-of-order packets of the newest one>"
   set -- $(awk -v th="$lthr" -v now="$now" -v age="$LAGE" \
-    '$3==200 && now-$1<=age {n++; if($2>=th){s++; f=0} else {f++; s=0}} END{print s+0, f+0, n+0}' "$LL")
-  lslow=$1; lfast=$2; lnum=$3
+    '$3==200 && now-$1<=age {n++; o=$5+0; if($2>=th){s++; f=0} else {f++; s=0}} END{print s+0, f+0, n+0, o+0}' "$LL")
+  lslow=$1; lfast=$2; lnum=$3; looo=$4; lwhy="last $LNEED 1 MB probes took"
+  if [ "$LIGHT_ACTIVE" != 1 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOOSH" ] && [ "$LOOO" = 0 ] && [ "$lts" -gt "${LAST_SHADOW:-0}" ]; then
+    LAST_SHADOW=$lts; log "SHADOW: slow 1 MB probe ${lt}s with $looo out-of-order packets (slow run $lslow)"
+  fi
   if [ "$lnum" = 0 ]; then ep=0
   elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$lslow" -ge "$LNEED" ]; then ep=1
+  elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$LOOO" -gt 0 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOO" ]; then ep=1; lwhy="1 MB probe with $looo out-of-order packets took"
   elif [ "$LIGHT_ACTIVE" = 1 ] && [ "$lfast" -ge "$LOUT" ]; then ep=0
   fi
   if [ "$ep" = 0 ] && [ "$lts" -gt "$LBASE_TS" ] && [ "$(tail -n 1 "$LL" | awk '{print $3}')" = 200 ] && awk -v t="$lt" -v th="$lthr" 'BEGIN{exit !(t<th)}'; then
@@ -68,7 +74,7 @@ else
 fi
 if [ "$ep" = 1 ] && [ "$LIGHT_ACTIVE" != 1 ]; then
   LIGHT_ACTIVE=1; LIGHT_SINCE=$now; LIGHT_TOTAL=$((LIGHT_TOTAL + 1))
-  log "EPISODE started: last $LNEED 1 MB probes took >= ${lthr}s (baseline ${lbase}s, latest ${lt}s)"
+  log "EPISODE started: $lwhy >= ${lthr}s (baseline ${lbase}s, latest ${lt}s)"
 elif [ "$ep" = 0 ] && [ "$LIGHT_ACTIVE" = 1 ]; then
   LIGHT_ACTIVE=0
   log "EPISODE cleared after $((now - LIGHT_SINCE))s"

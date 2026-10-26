@@ -95,6 +95,7 @@ services:
       LOUT: ${LIGHT_CLEAR:-5}
       LK: ${LIGHT_K:-2}
       LFLOOR: ${LIGHT_FLOOR_SEC:-0.8}
+      LOOO: ${LIGHT_OOO:-0}
       LIGHT_SIZE: ${LIGHT_SIZE:-1000000}
     volumes:
       - ./agent:/app:ro
