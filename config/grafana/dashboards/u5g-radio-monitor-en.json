@@ -809,7 +809,7 @@
    "id": 17,
    "type": "timeseries",
    "title": "WAN latency (ICMP to DNA and 1.1.1.1)",
-   "description": "Round-trip time measured by blackbox every 15 s through the U5G. Replaces the gateway's uplink latency, which UniFi updates only during a short morning window and then holds all day.",
+   "description": "Blackbox ICMP through the U5G every 15 s. Lines: median over 5 min (the usual latency). Dots: single pings of 150 ms or more (the highest one per drawn interval, so none is lost when zoomed out). Markers at the top (2 s): lost pings. Log scale. Replaces the gateway's uplink latency, which UniFi updates only during a short morning window and then holds all day.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -823,25 +823,208 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"nopeus.dna.fi\"}",
-     "legendFormat": "DNA (nopeus.dna.fi)"
+     "expr": "quantile_over_time(0.5, probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"nopeus.dna.fi\"}[5m])",
+     "legendFormat": "DNA median 5 min"
     },
     {
      "refId": "B",
-     "expr": "probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"1.1.1.1\"}",
-     "legendFormat": "1.1.1.1"
+     "expr": "quantile_over_time(0.5, probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"1.1.1.1\"}[5m])",
+     "legendFormat": "1.1.1.1 median 5 min"
+    },
+    {
+     "refId": "C",
+     "expr": "max_over_time(probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"nopeus.dna.fi\"}[$__interval]) >= 0.15",
+     "legendFormat": "DNA ping >= 150 ms"
+    },
+    {
+     "refId": "D",
+     "expr": "max_over_time(probe_icmp_duration_seconds{phase=\"rtt\",job=\"blackbox_icmp\",instance=\"1.1.1.1\"}[$__interval]) >= 0.15",
+     "legendFormat": "1.1.1.1 ping >= 150 ms"
+    },
+    {
+     "refId": "E",
+     "expr": "(min_over_time(probe_success{job=\"blackbox_icmp\",instance=\"nopeus.dna.fi\"}[$__interval]) == 0) + 2",
+     "legendFormat": "DNA ping lost"
+    },
+    {
+     "refId": "F",
+     "expr": "(min_over_time(probe_success{job=\"blackbox_icmp\",instance=\"1.1.1.1\"}[$__interval]) == 0) + 2",
+     "legendFormat": "1.1.1.1 ping lost"
     }
    ],
    "fieldConfig": {
     "defaults": {
      "unit": "s",
      "custom": {
-      "lineWidth": 2,
+      "drawStyle": "line",
+      "lineWidth": 1,
       "fillOpacity": 0,
-      "spanNulls": false
-     }
+      "showPoints": "never",
+      "spanNulls": 60000,
+      "scaleDistribution": {
+       "type": "log",
+       "log": 10
+      }
+     },
+     "min": 0.02,
+     "max": 2
     },
-    "overrides": []
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "A"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "green"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "B"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "yellow"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "C"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       },
+       {
+        "id": "custom.drawStyle",
+        "value": "points"
+       },
+       {
+        "id": "custom.showPoints",
+        "value": "always"
+       },
+       {
+        "id": "custom.pointSize",
+        "value": 5
+       },
+       {
+        "id": "custom.spanNulls",
+        "value": false
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "D"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "orange"
+        }
+       },
+       {
+        "id": "custom.drawStyle",
+        "value": "points"
+       },
+       {
+        "id": "custom.showPoints",
+        "value": "always"
+       },
+       {
+        "id": "custom.pointSize",
+        "value": 5
+       },
+       {
+        "id": "custom.spanNulls",
+        "value": false
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "E"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "purple"
+        }
+       },
+       {
+        "id": "custom.drawStyle",
+        "value": "points"
+       },
+       {
+        "id": "custom.showPoints",
+        "value": "always"
+       },
+       {
+        "id": "custom.pointSize",
+        "value": 9
+       },
+       {
+        "id": "custom.spanNulls",
+        "value": false
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byFrameRefID",
+       "options": "F"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "blue"
+        }
+       },
+       {
+        "id": "custom.drawStyle",
+        "value": "points"
+       },
+       {
+        "id": "custom.showPoints",
+        "value": "always"
+       },
+       {
+        "id": "custom.pointSize",
+        "value": 9
+       },
+       {
+        "id": "custom.spanNulls",
+        "value": false
+       }
+      ]
+     }
+    ]
    },
    "options": {
     "legend": {
@@ -851,7 +1034,8 @@
     "tooltip": {
      "mode": "multi"
     }
-   }
+   },
+   "interval": "15s"
   },
   {
    "id": 106,
