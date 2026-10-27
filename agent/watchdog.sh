@@ -14,7 +14,8 @@ PROBE=${PROBE:-$D/probe-light.sh}
 EPTEST=${EPTEST:-$(dirname "$0")/episode-tests.sh} # run once per trigger, before any cure (~21 MB, 2-6 min); "off" disables
 LNEED=${LNEED:-3}           # consecutive slow samples (1 per minute) to detect
 LOUT=${LOUT:-5}             # consecutive fast samples to clear
-LOOO=${LOOO:-0}             # fast detection: ONE slow sample with >= LOOO out-of-order packets (light.log column 5) starts an episode; 0 = off
+LOOO=${LOOO:-0}             # fast detection: ONE sample of >= LOOOT s with >= LOOO out-of-order packets (light.log column 5) starts an episode; 0 = off
+LOOOT=${LOOOT:-3}           # fast detection: minimum time (s); episodes 4-5 s with 140-330 packets, false slow samples <= 1.7 s with up to 110
 LOOOSH=${LOOOSH:-2}         # with LOOO=0: log such samples as "SHADOW" only, to evaluate the fast rule
 LK=${LK:-2}                 # slow = time >= max(LK x baseline, LFLOOR); 2 x ~0.47 s catches ~10 Mbit/s and below
 LFLOOR=${LFLOOR:-0.8}       # threshold floor (s); good state p50 0.47 s / p98 1.07 s, severe episode 3.5-5 s (capped by LIGHT_MAXT)
@@ -55,14 +56,15 @@ if [ -s "$LL" ]; then
   [ $((now - lts)) -lt 600 ] && fresh=1
   # trailing runs over recent HTTP-200 samples: "<slow_run> <fast_run> <samples> <out-of-order packets of the newest one>"
   set -- $(awk -v th="$lthr" -v now="$now" -v age="$LAGE" \
-    '$3==200 && now-$1<=age {n++; o=$5+0; if($2>=th){s++; f=0} else {f++; s=0}} END{print s+0, f+0, n+0, o+0}' "$LL")
-  lslow=$1; lfast=$2; lnum=$3; looo=$4; lwhy="last $LNEED 1 MB probes took"
+    '$3==200 && now-$1<=age {n++; o=$5+0; lt2=$2; if($2>=th){s++; f=0} else {f++; s=0}} END{print s+0, f+0, n+0, o+0, lt2+0}' "$LL")
+  lslow=$1; lfast=$2; lnum=$3; looo=$4; lt200=$5; lwhy="last $LNEED 1 MB probes took >= ${lthr}s"
   if [ "$LIGHT_ACTIVE" != 1 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOOSH" ] && [ "$LOOO" = 0 ] && [ "$lts" -gt "${LAST_SHADOW:-0}" ]; then
     LAST_SHADOW=$lts; log "SHADOW: slow 1 MB probe ${lt}s with $looo out-of-order packets (slow run $lslow)"
   fi
   if [ "$lnum" = 0 ]; then ep=0
   elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$lslow" -ge "$LNEED" ]; then ep=1
-  elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$LOOO" -gt 0 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOO" ]; then ep=1; lwhy="1 MB probe with $looo out-of-order packets took"
+  elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$LOOO" -gt 0 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOO" ] && awk -v t="$lt200" -v m="$LOOOT" 'BEGIN{exit !(t>=m)}'; then
+    ep=1; lwhy="1 MB probe took ${lt200}s (>= ${LOOOT}s) with $looo out-of-order packets (>= $LOOO)"
   elif [ "$LIGHT_ACTIVE" = 1 ] && [ "$lfast" -ge "$LOUT" ]; then ep=0
   fi
   if [ "$ep" = 0 ] && [ "$lts" -gt "$LBASE_TS" ] && [ "$(tail -n 1 "$LL" | awk '{print $3}')" = 200 ] && awk -v t="$lt" -v th="$lthr" 'BEGIN{exit !(t<th)}'; then
@@ -74,7 +76,7 @@ else
 fi
 if [ "$ep" = 1 ] && [ "$LIGHT_ACTIVE" != 1 ]; then
   LIGHT_ACTIVE=1; LIGHT_SINCE=$now; LIGHT_TOTAL=$((LIGHT_TOTAL + 1))
-  log "EPISODE started: $lwhy >= ${lthr}s (baseline ${lbase}s, latest ${lt}s)"
+  log "EPISODE started: $lwhy (baseline ${lbase}s, latest ${lt}s)"
 elif [ "$ep" = 0 ] && [ "$LIGHT_ACTIVE" = 1 ]; then
   LIGHT_ACTIVE=0
   log "EPISODE cleared after $((now - LIGHT_SINCE))s"

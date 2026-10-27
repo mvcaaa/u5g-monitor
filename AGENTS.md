@@ -21,7 +21,7 @@ and an `agent` container (`agent/probe-light.sh` and `agent/watchdog.sh` every m
 7. The agent's modem key is restricted to `ping | diag | radio-status | cure` by a forced command (`radio-status` added 2026-10-21 on the owner's decision). Do not widen it further without the owner, do not add other keys, do not enable password-less root elsewhere.
 8. Do not add active measurements that push large traffic: the unlimited plan is capped; probes are a 1 MB light probe per minute plus the diagnostic 5 MB per target (DNA, Cloudflare) per 5 min by design (about 4.3 GB/day together), plus ~21 MB of episode tests per trigger (at most one per hour) and two good-state reference runs a day (~42 MB/day). Do not add more or raise sizes/rates without the owner's approval.
 9. Report honestly. If a check was not run, say so; do not describe the stack as "working" from syntax checks alone (see docs/KNOWN_GAPS.md for what was never run end to end).
-10. The light probe is the only episode detector (since 2026-10-20, owner's decision); in `dry` mode it triggers `diag` only. Do not loosen its threshold (`LIGHT_K`, `LIGHT_FLOOR_SEC`) without replaying history for false detections (docs/OPERATIONS.md "Light probe"); the out-of-order fast rule (`LIGHT_OOO` > 0) is enabled only by the owner, after its `SHADOW:` lines were checked.
+10. The light probe is the only episode detector (since 2026-10-20, owner's decision); in `dry` mode it triggers `diag` only. Do not loosen its threshold (`LIGHT_K`, `LIGHT_FLOOR_SEC`) without replaying history for false detections (docs/OPERATIONS.md "Light probe"); the out-of-order fast rule (`LIGHT_OOO` > 0, with `LIGHT_OOO_SEC`) is enabled only by the owner.
 
 ## Repository map and invariants
 | Area | Invariant |

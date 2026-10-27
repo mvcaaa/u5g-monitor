@@ -65,13 +65,14 @@ after 5 in a row below; failed samples (non-200) neither count nor clear. In ~9 
 `docs/episodes/2026-10-20-episodes-2-3.md`. The dashboard panel shows the probe time with the baseline and threshold lines.
 Mild drops of ~12-14 Mbit/s look like the slow tail of the good state and are not detected (the 5 MB diagnostic probe shows them on the dashboard, but no alert watches it).
 
-**Out-of-order packets (fast rule, shadow since 2026-10-26).** The probe also records how many packets of its own download arrived out of order
-(`u5g_probe_light_ooo_packets`, column 5 of `light.log`). In the pcaps of 19 fully developed episodes nearly every download had 2-16 out-of-order packets
-among its first 100 segments; all 44 downloads of the good-state references had 0. Slowness alone is not specific enough for a faster rule: over
-2026-10-19..26 (9 832 HTTP-200 samples) a single sample >= 3 s happened 17 times and two slow samples in a row 3 times outside episodes.
-With `LIGHT_OOO` (`LOOO`) > 0 one slow sample with at least that many out-of-order packets starts an episode at once (about 2 minutes earlier);
-with 0 (default) such samples are only logged as `SHADOW:` in `watchdog.log`. Turn it on only after the shadow lines have been checked against
-episodes and false starts (the false slow samples have never been measured for reordering), and with the owner's approval.
+**Out-of-order packets (fast rule, shadow since 2026-10-26).** While curl downloads, the probe polls `ss` for its socket and records how many
+packets arrived out of order (`u5g_probe_light_ooo_packets`, column 5 of `light.log`). Slowness alone is not specific enough for a faster rule:
+over 2026-10-19..26 (9 832 HTTP-200 samples) a single sample >= 3 s happened 17 times and two slow samples in a row 3 times outside episodes.
+Reordering alone is not either: in 28 h (2026-10-26/27) four false slow samples of 1.1-1.7 s had 16-110 out-of-order packets, and fast
+samples up to 301. Together they separate cleanly: the first sample of each of the five episodes in that time took 4.0-5.0 s with 158-320.
+With `LIGHT_OOO` (`LOOO`, e.g. 100) > 0 one sample of at least `LIGHT_OOO_SEC` (`LOOOT`, 3 s) with at least that many out-of-order packets
+starts an episode at once, about 2 minutes earlier than three slow samples; with 0 (default) slow samples with reordering are only logged as
+`SHADOW:` in `watchdog.log`. Enabling it is the owner's decision.
 
 ## Episode tests
 On each trigger (after `diag`, before a cure in live mode) the watchdog runs `agent/episode-tests.sh`: 100 DF pings per size (56/1000/1200/1400/1472 B)
