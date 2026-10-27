@@ -1,8 +1,8 @@
 #!/bin/bash
 # u5g light probe: ONE small download from DNA per run (default 1 MB), judged by its TIME, not by speed:
 # TCP slow start makes the average speed of a 1 MB file misleading (10-26 Mbit/s even in the good state).
-# With python3 the download also reads the socket's TCP_INFO: out-of-order data packets received (tcpi_rcv_ooopack) and data segments in.
-# Episodes reorder packets (5-16 of the first 100 segments), the good state never does; without python3 curl is used and both are 0.
+# While curl downloads, `ss` is polled for its socket: out-of-order data packets received (rcv_ooopack) and data segments in.
+# Episodes reorder packets (150-200 per 1 MB), the good state does not; without `ss` both are 0. curl alone decides time and code.
 # Output: $D/textfile/u5g_probe_light.prom (metrics) and $D/state/light.log
 # ("<unix_ts> <time_total_s> <http_code> <bytes> <ooo_packets> <data_segs_in>", last 200 lines).
 D=${D:-/data}
@@ -12,49 +12,25 @@ SIZE=${LIGHT_SIZE:-1000000}
 MAXT=${LIGHT_MAXT:-5}
 URL=${LIGHT_URL:-http://nopeus.dna.fi:8080/download?size=$SIZE}
 mkdir -p "$D/textfile" "$D/state"
-if command -v python3 >/dev/null 2>&1; then
-  r=$(python3 -I - "$URL" "$MAXT" 2>/dev/null <<'EOF'
-import socket, struct, sys, time, urllib.parse
-u, maxt = urllib.parse.urlsplit(sys.argv[1]), float(sys.argv[2])
-t0 = time.time(); n = code = ooo = segs = 0; head = b""
-try:
-    s = socket.create_connection((u.hostname, u.port or 80), timeout=maxt)
-    path = u.path + ("?" + u.query if u.query else "")
-    s.sendall(f"GET {path} HTTP/1.1\r\nHost: {u.netloc}\r\nUser-Agent: u5g-probe-light\r\nAccept: */*\r\nConnection: close\r\n\r\n".encode())
-    while True:
-        left = maxt - (time.time() - t0)
-        if left <= 0:
-            break
-        s.settimeout(left)
-        b = s.recv(65536)
-        if not b:
-            break
-        if code == 0:  # count body bytes only, like curl's size_download
-            head += b
-            if b"\r\n\r\n" not in head:
-                continue
-            h, _, b = head.partition(b"\r\n\r\n")
-            code = int(h.split(None, 2)[1])
-        n += len(b)
-except OSError:
-    pass
-t = time.time() - t0
-try:
-    ti = s.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 232)
-    segs, = struct.unpack_from("I", ti, 152)
-    if len(ti) >= 228:
-        ooo, = struct.unpack_from("I", ti, 224)
-    s.close()
-except (NameError, AttributeError, OSError):
-    pass
-print(code, n, f"{min(t, maxt):.6f}", ooo, segs)  # like curl -m: a timeout mid-body keeps the http code
-EOF
-)
-else
-  r=$(curl -s -L -m "$MAXT" -o /dev/null -w '%{http_code} %{size_download} %{time_total}' "$URL" 2>/dev/null)
+T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+curl -s -L -m "$MAXT" -o /dev/null -w '%{http_code} %{size_download} %{time_total} %{local_port}' "$URL" > "$T/r" 2>/dev/null &
+pid=$!
+dport=$(echo "$URL" | sed -nE 's#^[a-z]+://[^/:]+:([0-9]+).*#\1#p'); dport=${dport:-80}
+if command -v ss >/dev/null 2>&1; then
+  # "<local_port> <ooo> <segs>" per socket to that port, last poll wins (the counters only grow)
+  while kill -0 "$pid" 2>/dev/null; do
+    ss -Htin state established "( dport = :$dport )" 2>/dev/null | awk '
+      /^[0-9]/ {n=split($(NF-1),a,":"); p=a[n]; next}
+      p != "" {o=0; s=0; for(i=1;i<=NF;i++){ if($i ~ /^rcv_ooopack:/){split($i,b,":"); o=b[2]} if($i ~ /^data_segs_in:/){split($i,b,":"); s=b[2]} }
+               print p, o, s; p=""}' >> "$T/ss"
+    sleep 0.1
+  done
 fi
-set -- $r
-code=${1:-0}; bytes=${2:-0}; t=${3:-0}; ooo=${4:-0}; segs=${5:-0}
+wait "$pid"
+set -- $(cat "$T/r")
+code=${1:-0}; bytes=${2:-0}; t=${3:-0}; lport=${4:-0}
+set -- $(awk -v p="$lport" '$1==p {o=$2; s=$3} END{print o+0, s+0}' "$T/ss" 2>/dev/null)
+ooo=${1:-0}; segs=${2:-0}
 ts=$(date +%s)
 echo "$ts $t $code $bytes $ooo $segs" >> "$LOGF"
 tail -n 200 "$LOGF" > "$LOGF.tmp" 2>/dev/null && mv "$LOGF.tmp" "$LOGF"

@@ -43,5 +43,5 @@ and `AT!NRINFO?` (NR RSSI per antenna, MIMO layers) is in `data/radio/<YYYYMMDD>
 ## Written by `agent/probe-light.sh` (`data/textfile/u5g_probe_light.prom`, every minute)
 `u5g_probe_light_last_run_timestamp_seconds`, `_http_code`, `_bytes`, `_time_seconds` (total time of the 1 MB download from DNA - the quantity that is judged),
 `_download_bits_per_second` (informational only: slow start makes the speed of a 1 MB file unreliable),
-`_ooo_packets` (data packets of this download that arrived out of order, `tcpi_rcv_ooopack` from the socket's TCP_INFO; 0 in the good state, the episode signature)
-and `_data_segs_in` (data segments received; both 0 when python3 is missing and curl is used). Raw samples: `data/state/light.log`.
+`_ooo_packets` (data packets of this download that arrived out of order, `rcv_ooopack` of curl's socket polled with `ss` every 0.1 s; 0 in the good state, the episode signature)
+and `_data_segs_in` (data segments received at the last poll, so a little below the total; both 0 without `ss`). Raw samples: `data/state/light.log`.
