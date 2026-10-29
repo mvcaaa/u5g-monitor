@@ -13,7 +13,7 @@ where the monitoring stack predates the repo as UI apps and the agent runs as a 
    sudo git clone <this repo> /mnt/Main/u5g-monitor      # or scp/rsync the tree
    cd /mnt/Main/u5g-monitor && sudo ./scripts/init.sh    # edit .env, re-run (see DEPLOY.md)
    ```
-4. **Port conflicts:** if the UI-managed apps of layout B still run, they hold 30037/30104/30220/30910 etc. The compose stack
+4. **Port conflicts:** if the UI-managed apps of layout B still run, they hold 30037/30104/30910 etc. The compose stack
    defaults to 3000/9090 - set `GRAFANA_PORT`, `PROMETHEUS_PORT` in `.env` to free ports, or stop the old apps first.
    Do not delete the old apps' datasets until the new stack has run for a while (history lives in their Prometheus volume).
 5. `sudo docker compose up -d`, then `sudo ./scripts/verify.sh`.
@@ -38,7 +38,6 @@ the host only keeps the agent's data directory as a volume.
 | node-exporter with textfile collector | Custom App `node-exporter`, textfile dir mounted from `/mnt/Main/u5g-watchdog/textfile` | 30910 |
 | agent: probes, watchdog, episode/reference tests, radio snapshot | Custom App `u5g-agent` from `deploy/truenas-agent-app.yml`: image `ghcr.io/mvcaaa/u5g-agent` pinned by digest, host network, schedule `agent/crontab` (supercronic), volume `/mnt/Main/u5g-watchdog:/data` | |
 | agent data | `/mnt/Main/u5g-watchdog`: `mode`, `id_u5g` (root:600), `known_hosts` (the modem's host key), `state/`, `diag/`, `radio/`, `textfile/`, `watchdog.log` | |
-| Speedtest Tracker (stopped 2026-10-20, removed from the project) | UI app, kept stopped; no longer scraped | 30220 |
 
 **Install / update the agent app:** fill the placeholders of `deploy/truenas-agent-app.yml` (digest of the image to run, modem address and
 login, `/mnt/Main/u5g-watchdog`) and paste it in Apps -> Discover -> Install via YAML, or `midclt call app.create` with
