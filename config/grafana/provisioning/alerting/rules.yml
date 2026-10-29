@@ -141,8 +141,7 @@ groups:
     noDataState: OK
     execErrState: Error
     annotations:
-      summary: The light probe (1 MB every minute) was above its baseline threshold three times in a row
-        (episode start; diag/cure follow subject to the interval and daily limits).
+      summary: An episode was detected by the light probe and confirmed by the diag (DNA download below the confirmation threshold); the cure follows in live mode.
     labels:
       project: u5g
     data:
@@ -153,7 +152,7 @@ groups:
       datasourceUid: prometheus
       model:
         refId: A
-        expr: increase(u5g_watchdog_detections_total[10m])
+        expr: increase(u5g_watchdog_confirmed_total[10m])
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200

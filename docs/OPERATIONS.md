@@ -24,7 +24,7 @@ $SSH cure                          # starts the band cycle in the background (ho
 ```
 
 ## Episode playbook
-1. Telegram: "episode started", then "episode detected (dry-run)" (or "cure executed" in live mode).
+1. Telegram: "episode started" (only for an episode the pre-cure diag confirmed; unconfirmed detections stay in `watchdog.log` as `NOT CONFIRMED`), then "episode detected (dry-run)" (or "cure executed" in live mode).
 2. Read `data/watchdog.log`, the newest `data/diag/episode-*.txt` and its `*-tests.txt` (also the dashboard row "Episode tests"). Compare with `docs/baselines/` (good-state reference): DNA vs Cloudflare speed,
    `delta ... ofo/dsack`, traceroute, `AT!GSTATUS?` cell/bands.
 3. Before curing manually run extra tests worth keeping for the DNA case (the host probe history is in Prometheus already): `ssh <ssh_user>@<U5G_IP> 'sh -s' < modem/ofo-test.sh` (admin login, read-only, ~1 min) gives speed and TCP out-of-order counters per destination (DNA / Cloudflare / DNA). Run it again after the cure for a before/after pair.

@@ -31,11 +31,11 @@ log() { echo "$(date '+%F %T') [$MODE] $*" >> "$LOG"; }
 now=$(date +%s)
 
 LAST_TRIGGER=0; CURES_TOTAL=0; DRY_TOTAL=0; DAY=$(date +%F); DAY_COUNT=0; LAST_RESULT=-1; LAST_CURE_TS=0
-LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0; UNCONF_TOTAL=0
+LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0; UNCONF_TOTAL=0; CONF_TOTAL=0
 [ -f "$SE" ] && . "$SE"
 save() {
-  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\nUNCONF_TOTAL=%s\n' \
-    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" "$UNCONF_TOTAL" > "$SE.tmp" && mv "$SE.tmp" "$SE"
+  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\nUNCONF_TOTAL=%s\nCONF_TOTAL=%s\n' \
+    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" "$UNCONF_TOTAL" "$CONF_TOTAL" > "$SE.tmp" && mv "$SE.tmp" "$SE"
 }
 
 [ "$DAY" != "$(date +%F)" ] && { DAY=$(date +%F); DAY_COUNT=0; }
@@ -98,9 +98,13 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
     # the diag's own DNA download confirms the episode; a failed or missing download does not block the cure
     dmb=$(awk '/nopeus\.dna\.fi.*B\/s code=200/ {for(i=1;i<=NF;i++) if($(i+1)=="B/s") printf "%.1f", $i*8/1e6}' "$f" 2>/dev/null)
     if [ -n "$dmb" ] && [ "$CONFMB" != 0 ] && awk -v m="$dmb" -v c="$CONFMB" 'BEGIN{exit !(m>=c)}'; then
-      UNCONF_TOTAL=$((UNCONF_TOTAL + 1))
+      conf=0; UNCONF_TOTAL=$((UNCONF_TOTAL + 1))
       log "NOT CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (>= ${CONFMB}), no cure"
-    elif [ "$MODE" = live ]; then
+    else
+      conf=1; CONF_TOTAL=$((CONF_TOTAL + 1))
+      if [ -n "$dmb" ]; then log "CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (< ${CONFMB})"; else log "CONFIRMED: no DNA result in the diag, treated as confirmed"; fi
+    fi
+    if [ "$conf" = 1 ] && [ "$MODE" = live ]; then
       CURES_TOTAL=$((CURES_TOTAL + 1)); LAST_CURE_TS=$(date +%s)
       log "CURE: sending cure, waiting ${WAITAFTER}s"
       $SSHC cure >> "$LOG" 2>&1
@@ -111,7 +115,7 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
       log "CURE result=$LAST_RESULT 1 MB in ${2:-?}s (threshold ${lthr}s) code=${3:-?}"
       log "CURE: running diag after the cure -> ${f%.txt}-after.txt"
       timeout 220 $SSHC diag > "${f%.txt}-after.txt" 2>&1
-    else
+    elif [ "$conf" = 1 ]; then
       DRY_TOTAL=$((DRY_TOTAL + 1))
       log "DRY-RUN: would cure now (no action taken)"
     fi
@@ -137,6 +141,7 @@ save
   echo "u5g_watchdog_cures_total $CURES_TOTAL"
   echo "u5g_watchdog_dryrun_triggers_total $DRY_TOTAL"
   echo "u5g_watchdog_unconfirmed_total $UNCONF_TOTAL"
+  echo "u5g_watchdog_confirmed_total $CONF_TOTAL"
   echo "u5g_watchdog_last_cure_result $LAST_RESULT"
   echo "u5g_watchdog_last_cure_timestamp_seconds $LAST_CURE_TS"
   echo "u5g_watchdog_triggers_today $DAY_COUNT"
