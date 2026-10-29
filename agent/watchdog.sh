@@ -11,11 +11,12 @@ MAXDAY=${MAXDAY:-0}         # max triggers per day, 0 = no limit (MININT alone p
 WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring (the modem cycle itself holds 0D for 120 s, see docs/KNOWN_GAPS.md)
 SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
 PROBE=${PROBE:-$D/probe-light.sh}
-EPTEST=${EPTEST:-$(dirname "$0")/episode-tests.sh} # run once per trigger, before any cure (~21 MB, 2-6 min); "off" disables
+EPTEST=${EPTEST:-off}       # episode tests before the cure (~21 MB, 2-7 min): a path to episode-tests.sh enables them; off since 2026-10-28
 LNEED=${LNEED:-3}           # consecutive slow samples (1 per minute) to detect
 LOUT=${LOUT:-5}             # consecutive fast samples to clear
-LOOO=${LOOO:-0}             # fast detection: ONE sample of >= LOOOT s with >= LOOO out-of-order packets (light.log column 5) starts an episode; 0 = off
+LOOO=${LOOO:-100}           # fast detection: ONE sample of >= LOOOT s with >= LOOO out-of-order packets (light.log column 5) starts an episode; 0 = off
 LOOOT=${LOOOT:-3}           # fast detection: minimum time (s); episodes 4-5 s with 140-330 packets, false slow samples <= 1.7 s with up to 110
+CONFMB=${CONFMB:-10}        # cure only if the diag's 10 MB DNA download is below this (Mbit/s); episodes 1.3-1.6, good state >= 20; 0 = no check
 LOOOSH=${LOOOSH:-2}         # with LOOO=0: log such samples as "SHADOW" only, to evaluate the fast rule
 LK=${LK:-2}                 # slow = time >= max(LK x baseline, LFLOOR); 2 x ~0.47 s catches ~10 Mbit/s and below
 LFLOOR=${LFLOOR:-0.8}       # threshold floor (s); good state p50 0.47 s / p98 1.07 s, severe episode 3.5-5 s (capped by LIGHT_MAXT)
@@ -30,11 +31,11 @@ log() { echo "$(date '+%F %T') [$MODE] $*" >> "$LOG"; }
 now=$(date +%s)
 
 LAST_TRIGGER=0; CURES_TOTAL=0; DRY_TOTAL=0; DAY=$(date +%F); DAY_COUNT=0; LAST_RESULT=-1; LAST_CURE_TS=0
-LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0
+LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0; UNCONF_TOTAL=0
 [ -f "$SE" ] && . "$SE"
 save() {
-  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\n' \
-    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" > "$SE.tmp" && mv "$SE.tmp" "$SE"
+  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\nUNCONF_TOTAL=%s\n' \
+    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" "$UNCONF_TOTAL" > "$SE.tmp" && mv "$SE.tmp" "$SE"
 }
 
 [ "$DAY" != "$(date +%F)" ] && { DAY=$(date +%F); DAY_COUNT=0; }
@@ -94,7 +95,12 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
       log "EPISODE: running tests -> ${f%.txt}-tests.txt"
       D="$D" EPT_KIND=episode EPT_STEM="${f%.txt}" timeout 420 bash "$EPTEST" > "${f%.txt}-tests.txt" 2>&1
     fi
-    if [ "$MODE" = live ]; then
+    # the diag's own DNA download confirms the episode; a failed or missing download does not block the cure
+    dmb=$(awk '/nopeus\.dna\.fi.*B\/s code=200/ {for(i=1;i<=NF;i++) if($(i+1)=="B/s") printf "%.1f", $i*8/1e6}' "$f" 2>/dev/null)
+    if [ -n "$dmb" ] && [ "$CONFMB" != 0 ] && awk -v m="$dmb" -v c="$CONFMB" 'BEGIN{exit !(m>=c)}'; then
+      UNCONF_TOTAL=$((UNCONF_TOTAL + 1))
+      log "NOT CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (>= ${CONFMB}), no cure"
+    elif [ "$MODE" = live ]; then
       CURES_TOTAL=$((CURES_TOTAL + 1)); LAST_CURE_TS=$(date +%s)
       log "CURE: sending cure, waiting ${WAITAFTER}s"
       $SSHC cure >> "$LOG" 2>&1
@@ -130,6 +136,7 @@ save
   echo "u5g_watchdog_live_mode $([ "$MODE" = live ] && echo 1 || echo 0)"
   echo "u5g_watchdog_cures_total $CURES_TOTAL"
   echo "u5g_watchdog_dryrun_triggers_total $DRY_TOTAL"
+  echo "u5g_watchdog_unconfirmed_total $UNCONF_TOTAL"
   echo "u5g_watchdog_last_cure_result $LAST_RESULT"
   echo "u5g_watchdog_last_cure_timestamp_seconds $LAST_CURE_TS"
   echo "u5g_watchdog_triggers_today $DAY_COUNT"

@@ -72,13 +72,20 @@ Reordering alone is not either: in 28 h (2026-10-26/27) four false slow samples 
 samples up to 301. Together they separate cleanly: the first sample of each of the five episodes in that time took 4.0-5.0 s with 158-320.
 With `LIGHT_OOO` (`LOOO`, e.g. 100) > 0 one sample of at least `LIGHT_OOO_SEC` (`LOOOT`, 3 s) with at least that many out-of-order packets
 starts an episode at once, about 2 minutes earlier than three slow samples; with 0 (default) slow samples with reordering are only logged as
-`SHADOW:` in `watchdog.log`. Enabling it is the owner's decision.
+`SHADOW:` in `watchdog.log`. **On since 2026-10-28 15:37** (owner's decision, `LIGHT_OOO=100`); replayed on 26.10 15:47 - 28.10 13:29
+(2 737 samples) it fires on the first slow sample of all six episodes, 2 min before the 3-in-a-row rule, with no false start.
+
+**Cure confirmation (since 2026-10-29 14:02).** Whatever rule starts the episode, the watchdog sends the cure only if the `diag` taken right
+before it downloads less than `WD_CONFIRM_MBIT` (`CONFMB`, 10 Mbit/s) from DNA; otherwise it logs `NOT CONFIRMED` and counts
+`u5g_watchdog_unconfirmed_total`. Episodes measured 1.2-2.1 Mbit/s there, the good state 20-90. A failed diag download does not block the cure.
+Reason: on 2026-10-29 01:39 three slow samples (1.5-4.5 s, no reordering, household load, one failed sample in between) started an episode
+and the modem was cured while the diag showed DNA at 40.5 Mbit/s.
 
 ## Episode tests
 On each trigger (after `diag`, before a cure in live mode) the watchdog runs `agent/episode-tests.sh`: 100 DF pings per size (56/1000/1200/1400/1472 B)
 to DNA and Cloudflare in parallel, then four 5 MB downloads from DNA with MSS default/1200/1000/default. They tell an MTU/fragmentation problem
 (loss grows with size, smaller MSS restores speed) from a general downlink problem (all sizes and MSS equally slow). ~21 MB, ~2 min in the good state,
-up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. `EPTEST=off` disables them; the plan (owner, 2026-10-20) is to switch them off once 10-15 episodes have been collected.
+up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. They are **off since 2026-10-28** (owner's decision, after ~25 episodes; on 28.10 a run hung for its full 7 min before the cure); set `EPTEST` to the path of `episode-tests.sh` to run them again. The reference runs below continue.
 The TCP/IP headers of the downloads are captured with tcpdump into `<stem>-tests.pcap` (~0.7 MB; `EPT_PCAP=off` disables it).
 A good-state **reference** run (`EPT_KIND=reference`, ~21 MB each, ~42 MB/day) happens at 04:10 and 16:10 (agent loop; layout B: cron job "u5g reference tests")
 and is skipped while an episode is active; its report is `data/diag/reference-<time>-tests.txt`. The dashboard tables show the latest episode and reference runs side by side.
