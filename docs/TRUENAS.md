@@ -42,7 +42,9 @@ the host only keeps the agent's data directory as a volume.
 
 **Install / update the agent app:** fill the placeholders of `deploy/truenas-agent-app.yml` (digest of the image to run, modem address and
 login, `/mnt/Main/u5g-watchdog`) and paste it in Apps -> Discover -> Install via YAML, or `midclt call app.create` with
-`custom_compose_config_string`. Update = the same YAML with the new digest (`app.update`); rollback = the previous digest. The image is
+`custom_compose_config_string`. Update or rollback: copy `deploy/truenas-app-update.sh` and the template (as `/tmp/u5g-agent-app.yml`) to TrueNAS and run
+`sudo bash truenas-app-update.sh <sha256:digest>` (it takes the modem settings from the running container, validates the YAML and calls
+`app.update`); the digest of every build is listed under the GHCR package versions (tag `sha-<commit>`). The image is
 pulled once at install, never during an episode.
 **Look at it:** `sudo docker logs --tail 50 ix-u5g-agent-agent-1` (supercronic and job output), `/mnt/Main/u5g-watchdog/watchdog.log`;
 run a script by hand: `sudo docker exec ix-u5g-agent-agent-1 bash /app/watchdog.sh` (or `env EPT_KIND=reference bash /app/episode-tests.sh`).
