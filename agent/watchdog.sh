@@ -18,7 +18,9 @@ LNEED=${LNEED:-3}           # consecutive slow samples (1 per minute) to detect
 LOUT=${LOUT:-5}             # consecutive fast samples to clear
 LOOO=${LOOO:-100}           # fast detection: ONE sample of >= LOOOT s with >= LOOO out-of-order packets (light.log column 5) starts an episode; 0 = off
 LOOOT=${LOOOT:-3}           # fast detection: minimum time (s); episodes 4-5 s with 140-330 packets, false slow samples <= 1.7 s with up to 110
-CONFMB=${CONFMB:-10}        # cure only if the diag's 10 MB DNA download is below this (Mbit/s); episodes 1.3-1.6, good state >= 20; 0 = no check
+CONFMB=${CONFMB:-10}        # cure only if the diag's 10 MB DNA download is below this (Mbit/s); episodes 1.2-2.1; 0 = no check
+CONFRATIO=${CONFRATIO:-5}   # ... and Cloudflare is this many times faster (episodes 12.9-52, a loaded link 0.2-1.7)
+CONFOFO=${CONFOFO:-0.2}     # ... or this share of the diag's segments arrived out of order (episodes 0.72-0.78, loaded 0)
 LOOOSH=${LOOOSH:-2}         # with LOOO=0: log such samples as "SHADOW" only, to evaluate the fast rule
 LK=${LK:-2}                 # slow = time >= max(LK x baseline, LFLOOR); 2 x ~0.47 s catches ~10 Mbit/s and below
 LFLOOR=${LFLOOR:-0.8}       # threshold floor (s); good state p50 0.47 s / p98 1.07 s, severe episode 3.5-5 s (capped by LIGHT_MAXT)
@@ -100,14 +102,28 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$CONF_ACTI
       log "EPISODE: running tests -> ${f%.txt}-tests.txt"
       D="$D" EPT_KIND=episode EPT_STEM="${f%.txt}" timeout 420 bash "$EPTEST" > "${f%.txt}-tests.txt" 2>&1
     fi
-    # the diag's own DNA download confirms the episode; a failed or missing download does not block the cure
-    dmb=$(awk '/nopeus\.dna\.fi.*B\/s code=200/ {for(i=1;i<=NF;i++) if($(i+1)=="B/s") printf "%.1f", $i*8/1e6}' "$f" 2>/dev/null)
-    if [ -n "$dmb" ] && [ "$CONFMB" != 0 ] && awk -v m="$dmb" -v c="$CONFMB" 'BEGIN{exit !(m>=c)}'; then
+    # the diag confirms the episode: DNA slow AND (Cloudflare >= CONFRATIO x faster OR >= CONFOFO of the segments out of order);
+    # a loaded link slows both and reorders nothing. Missing data never blocks the cure: no DNA result, or neither Cloudflare nor OFO.
+    set -- $(awk -v cm="$CONFMB" -v cr="$CONFRATIO" -v co="$CONFOFO" '
+      /nopeus\.dna\.fi.*B\/s code=200/ {for(i=1;i<NF;i++) if($(i+1)=="B/s") d=$i*8/1e6}
+      /cloudflare.*B\/s code=200/      {for(i=1;i<NF;i++) if($(i+1)=="B/s") c=$i*8/1e6}
+      /^delta insegs=/ {for(i=1;i<=NF;i++){split($i,a,"="); if(a[1]=="delta insegs"||a[1]=="insegs") n=a[2]; if(a[1]=="ofo") o=a[2]}}
+      END {
+        r=(d>0 && c>0) ? c/d : -1; q=(n>0) ? o/n : -1
+        if (cm==0)      v="1 check_off"
+        else if (d<=0)  v="1 no_DNA_result"
+        else if (d>=cm) v="0 DNA_not_slow"
+        else if (r<0 && q<0) v="1 DNA_slow,_no_Cloudflare_or_OFO_data"
+        else if (r>=cr || q>=co) v="1 DNA_slow_and_Cloudflare_faster_or_reordered"
+        else v="0 DNA_slow_but_Cloudflare_as_slow_and_no_reordering"
+        printf "%s %s %s %s %s\n", v, (d>0 ? sprintf("%.1f",d) : "n/a"), (c>0 ? sprintf("%.1f",c) : "n/a"), (r>=0 ? sprintf("%.1f",r) : "n/a"), (q>=0 ? sprintf("%.2f",q) : "n/a") }' "$f" 2>/dev/null)
+    cwhy="${2//_/ }: DNA ${3:-?} Mbit/s (limit ${CONFMB}), Cloudflare ${4:-?} (x${5:-?}, need ${CONFRATIO}), out of order ${6:-?} (need ${CONFOFO})"
+    if [ "${1:-1}" = 0 ]; then
       conf=0; CONF_ACTIVE=0; UNCONF_TOTAL=$((UNCONF_TOTAL + 1))
-      log "NOT CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (>= ${CONFMB}), no cure"
+      log "NOT CONFIRMED, no cure - $cwhy"
     else
       conf=1; CONF_ACTIVE=1; CONF_TOTAL=$((CONF_TOTAL + 1)); LAST_TRIGGER=$now; DAY_COUNT=$((DAY_COUNT + 1))
-      if [ -n "$dmb" ]; then log "CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (< ${CONFMB})"; else log "CONFIRMED: no DNA result in the diag, treated as confirmed"; fi
+      log "CONFIRMED - $cwhy"
     fi
     if [ "$conf" = 1 ] && [ "$MODE" = live ]; then
       CURES_TOTAL=$((CURES_TOTAL + 1)); LAST_CURE_TS=$(date +%s)

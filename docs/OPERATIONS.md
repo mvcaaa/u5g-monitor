@@ -75,9 +75,15 @@ starts an episode at once, about 2 minutes earlier than three slow samples; with
 `SHADOW:` in `watchdog.log`. **On since 2026-10-28 15:37** (owner's decision, `LIGHT_OOO=100`); replayed on 26.10 15:47 - 28.10 13:29
 (2 737 samples) it fires on the first slow sample of all six episodes, 2 min before the 3-in-a-row rule, with no false start.
 
-**Cure confirmation (since 2026-10-29 14:02).** Whatever rule starts the episode, the watchdog sends the cure only if the `diag` taken right
-before it downloads less than `WD_CONFIRM_MBIT` (`CONFMB`, 10 Mbit/s) from DNA; otherwise it logs `NOT CONFIRMED` and counts
-`u5g_watchdog_unconfirmed_total`. Episodes measured 1.2-2.1 Mbit/s there, the good state 20-90. A failed diag download does not block the cure. Only confirmed triggers count for `MININT` (1 h between cures), the "episode started"
+**Cure confirmation (since 2026-10-29).** Whatever rule starts the episode, the watchdog sends the cure only if the `diag` taken right
+before it shows the episode: the DNA download is below `WD_CONFIRM_MBIT` (`CONFMB`, 10 Mbit/s) **and** either Cloudflare is at least
+`CONFRATIO` (5) times faster or at least `CONFOFO` (0.2) of the segments arrived out of order; otherwise it logs `NOT CONFIRMED` and counts
+`u5g_watchdog_unconfirmed_total`. In all 31 developed episodes (2026-10-19..28) DNA was 1.2-2.1 Mbit/s with Cloudflare 12.9-52 times faster
+and 0.72-0.78 out of order (one fading episode: 0.04, but 30 times faster); household load slows both alike and reorders nothing
+(2026-10-29 15:19: DNA 7.6, Cloudflare 1.4, 0 out of order - cured by the earlier DNA-only check, which is why the second condition exists).
+Missing data never blocks the cure: no DNA result, or neither a Cloudflare result nor the TCP counters. History: 29.10 01:39 a cure with DNA
+at 40.5 Mbit/s (no check yet), 14:19 refused with DNA at 17.9.
+A failed diag download does not block the cure. Only confirmed triggers count for `MININT` (1 h between cures), the "episode started"
 alert and the dashboard's "Episode" panel and annotations. An unconfirmed episode stays open in the detector (`u5g_watchdog_episode_active`)
 and is checked again after `RECHECK` (1 h), or after `RECHECKF` (5 min) as soon as a sample shows the fast-rule signature, so a real
 episode that starts during household load is not held back by the hour between cures.
