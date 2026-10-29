@@ -1471,7 +1471,7 @@
    "id": 208,
    "type": "stat",
    "title": "Episode",
-   "description": "1 = episode active: 3 light probes in a row above the baseline threshold, until 5 in a row below it",
+   "description": "1 = an episode confirmed by the diag is active (detected by the light probe and the diag before the cure downloaded < 10 Mbit/s from DNA), until 5 fast light probes in a row. Detections the diag did not confirm (e.g. household load) stay 0.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -1485,7 +1485,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "u5g_watchdog_episode_active",
+     "expr": "u5g_watchdog_episode_confirmed",
      "instant": true
     }
    ],
@@ -1968,8 +1968,8 @@
   {
    "id": 218,
    "type": "stat",
-   "title": "Episodes detected (total)",
-   "description": "Episode starts counted by the watchdog (light probe above its baseline threshold 3 times in a row), whether or not a trigger followed",
+   "title": "Episodes confirmed / not confirmed (total)",
+   "description": "Watchdog triggers whose diag confirmed the episode (DNA < 10 Mbit/s; a cure follows in live mode) and those it did not confirm (no cure, no alert). Counted since 2026-10-29.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -1983,8 +1983,15 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "u5g_watchdog_detections_total",
-     "instant": true
+     "expr": "u5g_watchdog_confirmed_total",
+     "instant": true,
+     "legendFormat": "confirmed"
+    },
+    {
+     "refId": "B",
+     "expr": "u5g_watchdog_unconfirmed_total",
+     "instant": true,
+     "legendFormat": "not confirmed"
     }
    ],
    "fieldConfig": {
@@ -2013,7 +2020,7 @@
     },
     "colorMode": "background",
     "graphMode": "none",
-    "textMode": "auto"
+    "textMode": "value_and_name"
    }
   },
   {
@@ -2556,10 +2563,10 @@
     },
     "enable": true,
     "iconColor": "red",
-    "expr": "(u5g_watchdog_detections_total > u5g_watchdog_detections_total offset 1m) or (u5g_watchdog_light_detections_total > u5g_watchdog_light_detections_total offset 1m)",
+    "expr": "(u5g_watchdog_confirmed_total > u5g_watchdog_confirmed_total offset 1m) or ((u5g_watchdog_detections_total > u5g_watchdog_detections_total offset 1m) unless on() (u5g_watchdog_confirmed_total offset 1m)) or (u5g_watchdog_light_detections_total > u5g_watchdog_light_detections_total offset 1m)",
     "step": "60s",
     "titleFormat": "Episode start",
-    "textFormat": "Light probe above the baseline threshold 3 times in a row"
+    "textFormat": "Episode confirmed by the diag (before 2026-10-29: every detection by the light probe)"
    },
    {
     "name": "Episode end",
@@ -2569,10 +2576,10 @@
     },
     "enable": true,
     "iconColor": "green",
-    "expr": "((u5g_watchdog_episode_active offset 1m == 1) and (u5g_watchdog_episode_active == 0) and on() u5g_watchdog_detections_total) or ((u5g_watchdog_light_episode_active offset 1m == 1) and (u5g_watchdog_light_episode_active == 0))",
+    "expr": "((u5g_watchdog_episode_confirmed offset 1m == 1) and (u5g_watchdog_episode_confirmed == 0)) or (((u5g_watchdog_episode_active offset 1m == 1) and (u5g_watchdog_episode_active == 0) and on() u5g_watchdog_detections_total) unless on() (u5g_watchdog_episode_confirmed offset 1m)) or ((u5g_watchdog_light_episode_active offset 1m == 1) and (u5g_watchdog_light_episode_active == 0))",
     "step": "60s",
     "titleFormat": "Episode end",
-    "textFormat": "Light probe below the threshold 5 times in a row"
+    "textFormat": "Confirmed episode over: light probe below the threshold 5 times in a row"
    },
    {
     "name": "Episode tests",

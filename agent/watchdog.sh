@@ -6,7 +6,9 @@ OUTP=$D/textfile/u5g_watchdog.prom
 ST=$D/state; SE=$ST/state.env; LOG=$D/watchdog.log
 mkdir -p "$ST" "$D/diag"
 MODE=$(cat "$D/mode" 2>/dev/null || echo dry)
-MININT=${MININT:-3600}      # min seconds between triggers (episodes so far were >= 4.4 h apart; a failed cure is retried after 1 h)
+MININT=${MININT:-3600}      # min seconds between confirmed triggers (cures); a failed cure is retried after 1 h
+RECHECK=${RECHECK:-3600}    # an episode the diag did not confirm is checked again after this, or after RECHECKF if a sample shows the fast-rule signature
+RECHECKF=${RECHECKF:-300}
 MAXDAY=${MAXDAY:-0}         # max triggers per day, 0 = no limit (MININT alone prevents cure loops)
 WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring (the modem cycle itself holds 0D for 120 s, see docs/KNOWN_GAPS.md)
 SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
@@ -31,11 +33,11 @@ log() { echo "$(date '+%F %T') [$MODE] $*" >> "$LOG"; }
 now=$(date +%s)
 
 LAST_TRIGGER=0; CURES_TOTAL=0; DRY_TOTAL=0; DAY=$(date +%F); DAY_COUNT=0; LAST_RESULT=-1; LAST_CURE_TS=0
-LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0; UNCONF_TOTAL=0; CONF_TOTAL=0
+LIGHT_ACTIVE=0; LIGHT_SINCE=0; LIGHT_TOTAL=0; LAST_SUPP=0; LBASE_TS=0; LAST_SHADOW=0; UNCONF_TOTAL=0; CONF_TOTAL=0; CONF_ACTIVE=0; LAST_CHECK=0
 [ -f "$SE" ] && . "$SE"
 save() {
-  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\nUNCONF_TOTAL=%s\nCONF_TOTAL=%s\n' \
-    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" "$UNCONF_TOTAL" "$CONF_TOTAL" > "$SE.tmp" && mv "$SE.tmp" "$SE"
+  printf 'LAST_TRIGGER=%s\nCURES_TOTAL=%s\nDRY_TOTAL=%s\nDAY=%s\nDAY_COUNT=%s\nLAST_RESULT=%s\nLAST_CURE_TS=%s\nLIGHT_ACTIVE=%s\nLIGHT_SINCE=%s\nLIGHT_TOTAL=%s\nLAST_SUPP=%s\nLBASE_TS=%s\nLAST_SHADOW=%s\nUNCONF_TOTAL=%s\nCONF_TOTAL=%s\nCONF_ACTIVE=%s\nLAST_CHECK=%s\n' \
+    "$LAST_TRIGGER" "$CURES_TOTAL" "$DRY_TOTAL" "$DAY" "$DAY_COUNT" "$LAST_RESULT" "$LAST_CURE_TS" "$LIGHT_ACTIVE" "$LIGHT_SINCE" "$LIGHT_TOTAL" "$LAST_SUPP" "$LBASE_TS" "$LAST_SHADOW" "$UNCONF_TOTAL" "$CONF_TOTAL" "$CONF_ACTIVE" "$LAST_CHECK" > "$SE.tmp" && mv "$SE.tmp" "$SE"
 }
 
 [ "$DAY" != "$(date +%F)" ] && { DAY=$(date +%F); DAY_COUNT=0; }
@@ -51,7 +53,7 @@ lthr=$(awk -v b="$lbase" -v k="$LK" -v f="$LFLOOR" 'BEGIN{t=b*k; print (t>f) ? t
 
 # 2. episode state: detect after LNEED consecutive slow samples, clear after LOUT consecutive fast ones;
 #    failed (non-200) samples count as neither
-ep=$LIGHT_ACTIVE; fresh=0; lt=0; reach=-1
+ep=$LIGHT_ACTIVE; fresh=0; lt=0; reach=-1; fastsig=0
 if [ -s "$LL" ]; then
   lts=$(tail -n 1 "$LL" | awk '{print $1}'); lt=$(tail -n 1 "$LL" | awk '{print $2}')
   [ $((now - lts)) -lt 600 ] && fresh=1
@@ -62,9 +64,10 @@ if [ -s "$LL" ]; then
   if [ "$LIGHT_ACTIVE" != 1 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOOSH" ] && [ "$LOOO" = 0 ] && [ "$lts" -gt "${LAST_SHADOW:-0}" ]; then
     LAST_SHADOW=$lts; log "SHADOW: slow 1 MB probe ${lt}s with $looo out-of-order packets (slow run $lslow)"
   fi
+  [ "$LOOO" -gt 0 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOO" ] && awk -v t="$lt200" -v m="$LOOOT" 'BEGIN{exit !(t>=m)}' && fastsig=1
   if [ "$lnum" = 0 ]; then ep=0
   elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$lslow" -ge "$LNEED" ]; then ep=1
-  elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$LOOO" -gt 0 ] && [ "$lslow" -ge 1 ] && [ "$looo" -ge "$LOOO" ] && awk -v t="$lt200" -v m="$LOOOT" 'BEGIN{exit !(t>=m)}'; then
+  elif [ "$LIGHT_ACTIVE" != 1 ] && [ "$fastsig" = 1 ]; then
     ep=1; lwhy="1 MB probe took ${lt200}s (>= ${LOOOT}s) with $looo out-of-order packets (>= $LOOO)"
   elif [ "$LIGHT_ACTIVE" = 1 ] && [ "$lfast" -ge "$LOUT" ]; then ep=0
   fi
@@ -76,18 +79,20 @@ else
   ep=0
 fi
 if [ "$ep" = 1 ] && [ "$LIGHT_ACTIVE" != 1 ]; then
-  LIGHT_ACTIVE=1; LIGHT_SINCE=$now; LIGHT_TOTAL=$((LIGHT_TOTAL + 1))
+  LIGHT_ACTIVE=1; LIGHT_SINCE=$now; LIGHT_TOTAL=$((LIGHT_TOTAL + 1)); CONF_ACTIVE=0
   log "EPISODE started: $lwhy (baseline ${lbase}s, latest ${lt}s)"
 elif [ "$ep" = 0 ] && [ "$LIGHT_ACTIVE" = 1 ]; then
   LIGHT_ACTIVE=0
-  log "EPISODE cleared after $((now - LIGHT_SINCE))s"
+  log "EPISODE cleared after $((now - LIGHT_SINCE))s$([ "$CONF_ACTIVE" = 1 ] || echo ' (it was not confirmed)')"
+  CONF_ACTIVE=0
 fi
 
-# 3. trigger
-if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" = 0 ] || [ "$DAY_COUNT" -lt "$MAXDAY" ]; }; then
+# 3. trigger: diag, then a cure if the diag confirms; MININT counts from the last confirmed trigger, an unconfirmed episode is re-checked after RECHECK (RECHECKF with the fast-rule signature)
+recheck=$RECHECK; [ "$fastsig" = 1 ] && recheck=$RECHECKF
+if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$CONF_ACTIVE" = 1 ] || [ $((now - LAST_CHECK)) -ge "$recheck" ]; } && { [ "$MAXDAY" = 0 ] || [ "$DAY_COUNT" -lt "$MAXDAY" ]; }; then
   if $SSHC ping 2>/dev/null | grep -q pong; then
     reach=1
-    LAST_TRIGGER=$now; DAY_COUNT=$((DAY_COUNT + 1))
+    LAST_CHECK=$now
     f="$D/diag/episode-$(date +%Y%m%d-%H%M).txt"
     log "EPISODE: running diag -> $f"
     timeout 220 $SSHC diag > "$f" 2>&1
@@ -98,10 +103,10 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
     # the diag's own DNA download confirms the episode; a failed or missing download does not block the cure
     dmb=$(awk '/nopeus\.dna\.fi.*B\/s code=200/ {for(i=1;i<=NF;i++) if($(i+1)=="B/s") printf "%.1f", $i*8/1e6}' "$f" 2>/dev/null)
     if [ -n "$dmb" ] && [ "$CONFMB" != 0 ] && awk -v m="$dmb" -v c="$CONFMB" 'BEGIN{exit !(m>=c)}'; then
-      conf=0; UNCONF_TOTAL=$((UNCONF_TOTAL + 1))
+      conf=0; CONF_ACTIVE=0; UNCONF_TOTAL=$((UNCONF_TOTAL + 1))
       log "NOT CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (>= ${CONFMB}), no cure"
     else
-      conf=1; CONF_TOTAL=$((CONF_TOTAL + 1))
+      conf=1; CONF_ACTIVE=1; CONF_TOTAL=$((CONF_TOTAL + 1)); LAST_TRIGGER=$now; DAY_COUNT=$((DAY_COUNT + 1))
       if [ -n "$dmb" ]; then log "CONFIRMED: diag downloads ${dmb} Mbit/s from DNA (< ${CONFMB})"; else log "CONFIRMED: no DNA result in the diag, treated as confirmed"; fi
     fi
     if [ "$conf" = 1 ] && [ "$MODE" = live ]; then
@@ -126,7 +131,7 @@ if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$MAXDAY" =
   fi
 elif [ "$ep" = 1 ] && [ $((now - LAST_SUPP)) -ge 900 ]; then
   LAST_SUPP=$now
-  log "EPISODE ongoing but suppressed (interval/day limit: last trigger $((now - LAST_TRIGGER))s ago, today $DAY_COUNT/$MAXDAY)"
+  log "EPISODE ongoing but suppressed ($([ "$CONF_ACTIVE" = 1 ] && echo confirmed || echo "not confirmed, last check $((now - LAST_CHECK))s ago"); last cure trigger $([ "$LAST_TRIGGER" -gt 0 ] && echo "$((now - LAST_TRIGGER))s ago" || echo never), today $DAY_COUNT/$MAXDAY)"
 fi
 [ "$reach" = -1 ] && { $SSHC ping 2>/dev/null | grep -q pong && reach=1 || reach=0; }
 save
@@ -136,6 +141,7 @@ save
   echo "u5g_watchdog_last_run_timestamp_seconds $(date +%s)"
   echo "u5g_watchdog_probe_fresh $fresh"
   echo "u5g_watchdog_episode_active $ep"
+  echo "u5g_watchdog_episode_confirmed $([ "$ep" = 1 ] && [ "$CONF_ACTIVE" = 1 ] && echo 1 || echo 0)"
   echo "u5g_watchdog_modem_reachable $reach"
   echo "u5g_watchdog_live_mode $([ "$MODE" = live ] && echo 1 || echo 0)"
   echo "u5g_watchdog_cures_total $CURES_TOTAL"

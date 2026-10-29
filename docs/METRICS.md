@@ -12,7 +12,7 @@
 | `u5g_probe_last_run_timestamp_seconds` | | freshness |
 
 ## Written by `agent/watchdog.sh` (`data/textfile/u5g_watchdog.prom`)
-`u5g_watchdog_episode_active` (0/1), `_detections_total` (episode starts), `_light_baseline_seconds` (median of good-state light times), `_light_threshold_seconds` (current detection threshold), `_light_baseline_samples`, `_live_mode` (0 dry / 1 live), `_modem_reachable` (0/1), `_cures_total`,
+`u5g_watchdog_episode_active` (0/1, detector state incl. unconfirmed detections), `_episode_confirmed` (0/1, the diag confirmed the active episode; the dashboard's "Episode" panel), `_detections_total` (episode starts), `_light_baseline_seconds` (median of good-state light times), `_light_threshold_seconds` (current detection threshold), `_light_baseline_samples`, `_live_mode` (0 dry / 1 live), `_modem_reachable` (0/1), `_cures_total`,
 `_dryrun_triggers_total`, `_unconfirmed_total` (triggers whose diag still downloaded >= `CONFMB` Mbit/s from DNA, so no cure), `_confirmed_total` (the others; the "episode started" alert watches it), `_last_cure_result` (-1 none, 0 failed, 1 ok), `_last_cure_timestamp_seconds`,
 `_triggers_today`, `_probe_fresh` (light probe sample younger than 10 min), `_last_run_timestamp_seconds`.
 Retired on 2026-10-20: `u5g_watchdog_light_fresh`, `_light_episode_active`, `_light_primary`, `_light_detections_total`. Their history stays in Prometheus until retention drops it.

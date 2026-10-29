@@ -77,7 +77,10 @@ starts an episode at once, about 2 minutes earlier than three slow samples; with
 
 **Cure confirmation (since 2026-10-29 14:02).** Whatever rule starts the episode, the watchdog sends the cure only if the `diag` taken right
 before it downloads less than `WD_CONFIRM_MBIT` (`CONFMB`, 10 Mbit/s) from DNA; otherwise it logs `NOT CONFIRMED` and counts
-`u5g_watchdog_unconfirmed_total`. Episodes measured 1.2-2.1 Mbit/s there, the good state 20-90. A failed diag download does not block the cure.
+`u5g_watchdog_unconfirmed_total`. Episodes measured 1.2-2.1 Mbit/s there, the good state 20-90. A failed diag download does not block the cure. Only confirmed triggers count for `MININT` (1 h between cures), the "episode started"
+alert and the dashboard's "Episode" panel and annotations. An unconfirmed episode stays open in the detector (`u5g_watchdog_episode_active`)
+and is checked again after `RECHECK` (1 h), or after `RECHECKF` (5 min) as soon as a sample shows the fast-rule signature, so a real
+episode that starts during household load is not held back by the hour between cures.
 Reason: on 2026-10-29 01:39 three slow samples (1.5-4.5 s, no reordering, household load, one failed sample in between) started an episode
 and the modem was cured while the diag showed DNA at 40.5 Mbit/s.
 
