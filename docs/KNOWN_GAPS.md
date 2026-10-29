@@ -33,5 +33,6 @@ hook was tested with stubs (dry, live, `EPTEST=off`, default path). It ran durin
 - The detector sees only DNA's server and only the time of 1 MB. The 5 MB diagnostic probe (DNA vs Cloudflare, loaded RTT, OFO) is noisy (e.g. DNA 28 vs 66 Mbit/s a few minutes apart in the good state) and no longer decides anything.
 - Agent image (`Dockerfile`, supercronic schedule `agent/crontab`), 2026-10-29: built locally for linux/amd64; all watchdog stub suites pass
   inside it; the schedule ran 5 min in a container (jobs at the intended seconds, healthy); on TrueNAS the image ran probe-light, ssh `ping`,
-  radio-status and the watchdog (dry) once against the real modem in a temporary data dir. Not yet run: the GitHub Actions build, the
-  Custom App on TrueNAS, episode/reference tests (ping DF sizes, tcpdump) inside the image, and a live episode or cure from the container.
+  radio-status and the watchdog (dry) once against the real modem in a temporary data dir. The Actions build and the Custom App run
+  since 2026-10-29 (cutover 15:23, cron jobs deleted). Not yet run inside the image: episode/reference tests (ping DF sizes, tcpdump; the
+  first scheduled reference is 16:10) and a live episode or cure.

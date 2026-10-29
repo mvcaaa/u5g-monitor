@@ -15,7 +15,7 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 - Everything implemented on the live system must also be in this repo (scripts, dashboards, alerts, docs), with a commit; live-only hacks are not acceptable.
 
 ## Where things stand (2026-10-20)
-- Stack is deployed on the owner's TrueNAS in "layout B" (UI apps, see docs/TRUENAS.md). Owner's rule (2026-10-29): nothing of the project on the TrueNAS OS - no cron, no scripts; the agent moves from host cron jobs to the Custom App `u5g-agent` (image `ghcr.io/mvcaaa/u5g-agent`, schedule `agent/crontab` via supercronic). The compose stack in this repo is the portable version.
+- Stack is deployed on the owner's TrueNAS in "layout B" (UI apps, see docs/TRUENAS.md). Owner's rule (2026-10-29): nothing of the project on the TrueNAS OS - no cron, no scripts; since 2026-10-29 15:23 the agent runs as the Custom App `u5g-agent` (image `ghcr.io/mvcaaa/u5g-agent` by digest, schedule `agent/crontab` via supercronic); the host cron jobs 1-5 are deleted. The compose stack in this repo is the portable version.
 - Watchdog `mode=live` since 2026-10-20 21:00 (owner's decision): on each episode diag -> episode tests -> cure, at most one trigger per hour, no daily limit. First real auto-cure: episode 5 (2026-10-21 01:08, recovered ~8 min after onset): docs/episodes/2026-10-21-episode-5.md.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
 - Episodes 2 (night, untreated, ended by itself after ~7.7 h) and 3 (midday, cured by hand; recovery already during the 0D hold): docs/episodes/2026-10-20-episodes-2-3.md.
