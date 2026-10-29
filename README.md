@@ -27,7 +27,7 @@ Russian short version: [README.ru.md](README.ru.md)
 | Path | Purpose |
 |---|---|
 | `docker-compose.yml` | the whole stack: prometheus, grafana, blackbox, node-exporter (textfile only), unpoller, json-exporter, agent |
-| `agent/probe-light.sh`, `agent/probe.sh`, `agent/watchdog.sh`, `agent/episode-tests.sh`, `agent/radio-status.sh`, `agent/entrypoint.sh` | probes and watchdog (run inside the `agent` container) |
+| `agent/probe-light.sh`, `agent/probe.sh`, `agent/watchdog.sh`, `agent/episode-tests.sh`, `agent/radio-status.sh`, `agent/init.sh`, `agent/crontab`, `Dockerfile` | probes and watchdog, scheduled by supercronic in the `agent` image (`ghcr.io/mvcaaa/u5g-agent`, built by `.github/workflows/agent-image.yml`) |
 | `modem/` | scripts that live on the U5G: `u5g-dispatch.sh` (forced command), `band-cycle.sh` (the cure), `install-modem.sh` |
 | `config/` | Prometheus, blackbox, json_exporter (template, key rendered by `scripts/init.sh`), Grafana provisioning (datasource, dashboards, alert rules, Telegram contact point) |
 | `scripts/init.sh` | one-time bootstrap: `.env`, secrets, watchdog key, rendered Prometheus config |

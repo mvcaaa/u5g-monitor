@@ -11,7 +11,7 @@
 | Grafana dashboard import error "Cannot read properties of undefined (reading 'type')" | A `row` panel with an empty `panels` array. Rows must not carry a `panels` key (the shipped JSON is fine). |
 | Grafana alert in Error state | Metric not yet in Prometheus (first scrape ≤ 1 min); check `u5g_watchdog_*` in Explore. |
 | Telegram `chat not found` | Wrong `TELEGRAM_CHAT_ID` or you never messaged the bot. Chat id is numeric; get it from `getUpdates`. |
-| `u5g_probe_*` stale alert | `docker compose logs agent`; the agent needs internet at first start (apk). Check `data/state/heartbeat` age. |
+| `u5g_probe_*` stale alert | `docker compose logs agent` (supercronic logs every job start and failure); check the age of `data/state/light.log` (the container's healthcheck uses it). |
 | Agent healthcheck unhealthy | loop stuck (a cure waits ≥ 170 s, diag ≤ 220 s - give it 6 min) or `data/` not writable. |
 | `probe` http_code 000 / speed 0 | host has no route to `nopeus.dna.fi:8080` or Cloudflare; the watchdog ignores non-200 samples (never counts them as slow). |
 | Episode never triggers although speed is bad | needs 3 light samples in a row (HTTP 200) above `u5g_watchdog_light_threshold_seconds` (dashboard light panel); or the 1 h interval between triggers is active (see `watchdog.log` "suppressed"). |

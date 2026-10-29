@@ -1,0 +1,7 @@
+# u5g agent schedule (supercronic, container time zone TZ). Fields: second minute hour day-of-month month day-of-week year.
+# The watchdog runs right after the light probe, so it judges the sample of this minute; probe.sh and radio-status.sh start
+# at other seconds so that they do not compete with the 1 MB light probe. supercronic never overlaps a job with itself.
+0  * * * * * *      bash /app/probe-light.sh && bash /app/watchdog.sh
+20 */5 * * * * *    bash /app/probe.sh
+40 2-59/5 * * * * * bash /app/radio-status.sh
+0  10 4,16 * * * *  env EPT_KIND=reference bash /app/episode-tests.sh

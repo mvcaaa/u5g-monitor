@@ -2,7 +2,7 @@
 # u5g-radio-status: every 5 min, read-only radio snapshot from the modem (dispatcher command "radio-status", no traffic).
 # Raw output is appended to $D/radio/<YYYYMMDD>.txt; the main GSTATUS fields go to $D/textfile/u5g_radio.prom (atomic).
 D=${D:-/data}
-SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
+SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$D/known_hosts ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
 OUT=$D/textfile/u5g_radio.prom
 mkdir -p "$D/radio" "$D/textfile"
 r=$(timeout 60 $SSHC radio-status 2>&1)

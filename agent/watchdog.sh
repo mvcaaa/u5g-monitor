@@ -11,7 +11,7 @@ RECHECK=${RECHECK:-3600}    # an episode the diag did not confirm is checked aga
 RECHECKF=${RECHECKF:-300}
 MAXDAY=${MAXDAY:-0}         # max triggers per day, 0 = no limit (MININT alone prevents cure loops)
 WAITAFTER=${WAITAFTER:-170} # seconds to wait after cure before re-measuring (the modem cycle itself holds 0D for 120 s, see docs/KNOWN_GAPS.md)
-SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
+SSHC=${SSHC:-"ssh -p ${MODEM_SSH_PORT:-2222} -i $D/id_u5g -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$D/known_hosts ${MODEM_USER:-admin}@${MODEM_HOST:?set MODEM_HOST}"}
 PROBE=${PROBE:-$D/probe-light.sh}
 EPTEST=${EPTEST:-off}       # episode tests before the cure (~21 MB, 2-7 min): a path to episode-tests.sh enables them; off since 2026-10-28
 LNEED=${LNEED:-3}           # consecutive slow samples (1 per minute) to detect

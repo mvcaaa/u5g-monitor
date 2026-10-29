@@ -1,0 +1,27 @@
+# TrueNAS Custom App "u5g-agent" (Apps -> Discover -> Install via YAML, or midclt call app.create with custom_compose_config_string).
+# Replace the placeholders before installing; the filled-in copy stays in TrueNAS only (the modem login is private).
+#   __DIGEST__      sha256 digest of ghcr.io/mvcaaa/u5g-agent to run (pinned, so nothing is pulled during an episode)
+#   __MODEM_HOST__  modem address,  __MODEM_USER__  modem ssh login (restricted watchdog key in /data/id_u5g)
+#   __DATA__        host dataset with the agent's data (mode, id_u5g, known_hosts, state/, diag/, radio/, textfile/)
+services:
+  agent:
+    image: ghcr.io/mvcaaa/u5g-agent@__DIGEST__
+    restart: unless-stopped
+    network_mode: host
+    cap_add: [NET_RAW, NET_ADMIN]
+    environment:
+      TZ: Europe/Helsinki
+      MODEM_HOST: __MODEM_HOST__
+      MODEM_USER: __MODEM_USER__
+      MODEM_SSH_PORT: "2222"
+      MININT: "3600"
+      MAXDAY: "0"
+      LNEED: "3"
+      LOUT: "5"
+      LK: "2"
+      LFLOOR: "0.8"
+      LOOO: "100"
+      LOOOT: "3"
+      CONFMB: "10"
+    volumes:
+      - __DATA__:/data

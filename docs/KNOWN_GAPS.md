@@ -31,3 +31,7 @@ hook was tested with stubs (dry, live, `EPTEST=off`, default path). It ran durin
 - Modem reboot wipes the dispatcher/key/:2222 listener (MODEM.md). Alert "modem unreachable" is the mitigation.
 - Auto-cure (live mode since 2026-10-20 21:00) worked once for real (episode 5, 2026-10-21 01:08, recovery ~8 min after onset). One success is not a statistic; the 170 s re-measure caveat below still applies.
 - The detector sees only DNA's server and only the time of 1 MB. The 5 MB diagnostic probe (DNA vs Cloudflare, loaded RTT, OFO) is noisy (e.g. DNA 28 vs 66 Mbit/s a few minutes apart in the good state) and no longer decides anything.
+- Agent image (`Dockerfile`, supercronic schedule `agent/crontab`), 2026-10-29: built locally for linux/amd64; all watchdog stub suites pass
+  inside it; the schedule ran 5 min in a container (jobs at the intended seconds, healthy); on TrueNAS the image ran probe-light, ssh `ping`,
+  radio-status and the watchdog (dry) once against the real modem in a temporary data dir. Not yet run: the GitHub Actions build, the
+  Custom App on TrueNAS, episode/reference tests (ping DF sizes, tcpdump) inside the image, and a live episode or cure from the container.

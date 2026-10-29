@@ -6,7 +6,7 @@
   tagged `note`: the annotation query "Notes (all panels)" shows `note`-tagged annotations on every panel.
 - Annotations on every panel: "Episode start" (red) / "Episode end" (green) from the watchdog, "Watchdog trigger (dry-run)", "Cure executed",
   "Public IP change", "Episode tests" (purple, the tests finished). Use them on the WAN traffic panel to see what load preceded an episode.
-- Agent logs: `docker compose logs agent --tail 50` and `data/agent.log`; watchdog events: `data/watchdog.log`; per-episode diagnostics: `data/diag/episode-*.txt`.
+- Agent logs: `docker compose logs agent --tail 50` (supercronic and the output of every scheduled job); watchdog events: `data/watchdog.log`; per-episode diagnostics: `data/diag/episode-*.txt`.
 
 ## Mode switch (no restart)
 ```bash
@@ -47,7 +47,7 @@ Nothing is written to flash by design. Expect the alert "modem unreachable" afte
 
 **After the modem is back (wait until the radio is registered and the internet works again)**
 1. Re-install the modem side: `bash modem/install-modem.sh <ssh_user>@<U5G_IP>` (re-creates the dispatcher, key line, `band-cycle.sh` if absent, and starts dropbear on :2222). Use the admin account on port 22 (or `:2222` while that dropbear is still running and accepts an admin key). From a workstation that has no `data/`, point `U5G_PUB` at a copy of the watchdog's `id_u5g.pub`: `U5G_PUB=/path/id_u5g.pub bash modem/install-modem.sh <ssh_user>@<U5G_IP>`.
-2. Test the channel: `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> ping` → `pong`. If the host key changed after a firmware upgrade, the agent container's known_hosts is not persisted: `docker compose up -d --force-recreate agent`; for a manual test from your shell use `ssh-keygen -R '[<U5G_IP>]:2222'`.
+2. Test the channel: `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> ping` → `pong`. If the modem's host key changed (dropbear on :2222 can come back with a new key after a restart or firmware upgrade), the agent refuses to connect: remove the old key from the agent's `data/known_hosts` with `ssh-keygen -f data/known_hosts -R '[<U5G_IP>]:2222'` (the next connection accepts the new one); same for your own shell's known_hosts.
 3. Check that the custom profile survived: `ssh -p 2222 -i data/id_u5g -o BatchMode=yes <ssh_user>@<U5G_IP> diag | grep -c '^0D,'` should not be 0 (the installer also warns). Profiles are stored in the modem and normally survive a reboot, but a firmware/modem-firmware upgrade may reset them - **unverified**. If `0D` is gone and the owner wants it back: `ssh <ssh_user>@<U5G_IP> 'sh -s' < modem/create-profile-0d.sh` (see MODEM.md). Without `0D` the cure is refused, monitoring continues.
 4. Check `AT!BAND?` shows `00` and `AT!SELRAT?` shows `00, Automatic`.
 5. After a firmware upgrade: re-run `diag` and compare with `docs/baselines/good-state-2026-10-19.md` (idle ping ~37 ms, 4-hop traceroute, DNA 5 MB probe 28-66 Mbit/s, light probe baseline ~0.5 s); the AT command set, `uiwwand-chat`, `/etc/persistent` behaviour and the dropbear flags may differ in a new firmware - verify before trusting automation.
@@ -90,10 +90,10 @@ to DNA and Cloudflare in parallel, then four 5 MB downloads from DNA with MSS de
 (loss grows with size, smaller MSS restores speed) from a general downlink problem (all sizes and MSS equally slow). ~21 MB, ~2 min in the good state,
 up to ~6 min in an episode (each download is cut at 60 s); in live mode the cure starts that much later. They are **off since 2026-10-28** (owner's decision, after ~25 episodes; on 28.10 a run hung for its full 7 min before the cure); set `EPTEST` to the path of `episode-tests.sh` to run them again. The reference runs below continue.
 The TCP/IP headers of the downloads are captured with tcpdump into `<stem>-tests.pcap` (~0.7 MB; `EPT_PCAP=off` disables it).
-A good-state **reference** run (`EPT_KIND=reference`, ~21 MB each, ~42 MB/day) happens at 04:10 and 16:10 (agent loop; layout B: cron job "u5g reference tests")
+A good-state **reference** run (`EPT_KIND=reference`, ~21 MB each, ~42 MB/day) happens at 04:10 and 16:10 (`agent/crontab`)
 and is skipped while an episode is active; its report is `data/diag/reference-<time>-tests.txt`. The dashboard tables show the latest episode and reference runs side by side.
 In live mode the watchdog also saves `diag` **after** the cure (`episode-<time>-after.txt`), so every cured episode has a before/after pair.
-Manual run: `docker compose exec agent env EPT_KIND=reference bash /app/episode-tests.sh` (layout B: `sudo env D=/mnt/Main/u5g-watchdog EPT_KIND=reference bash /mnt/Main/u5g-watchdog/episode-tests.sh`).
+Manual run: `docker compose exec agent env EPT_KIND=reference bash /app/episode-tests.sh` (layout B: `sudo docker exec ix-u5g-agent-agent-1 env EPT_KIND=reference bash /app/episode-tests.sh`).
 Healthy reference 2026-10-20 20:41: 0 % loss at every size, RTT 36-44 ms, DNA 53-55 Mbit/s (default MSS) and 27-30 (1200/1000).
 Docker Desktop on macOS answers ICMP itself (RTT < 1 ms): run the pings on a Linux host.
 
