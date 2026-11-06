@@ -37,6 +37,7 @@ Russian short version: [README.ru.md](README.ru.md)
 | `docs/` | ARCHITECTURE, DEPLOY (agent runbook), TRUENAS, MODEM, OPERATIONS, FINDINGS, METRICS, KNOWN_GAPS, TROUBLESHOOTING, `episodes/` (recorded episodes) |
 
 ## Documentation reading order
+0. **[docs/FINAL-REPORT.md](docs/FINAL-REPORT.md)** - the outcome (2026-11-06): what the episodes were, what cured them, why the lab is wound down.
 1. **This README** - what the system is, the safety model, the layout.
 2. **[AGENTS.md](AGENTS.md)** - mandatory if you are an automated agent: hard safety rules, invariants, pre-commit checks.
 3. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - components, data flow, and *why* it is built this way (modem is not a host for continuous work).

@@ -36,3 +36,6 @@ hook was tested with stubs (dry, live, `EPTEST=off`, default path). It ran durin
   radio-status and the watchdog (dry) once against the real modem in a temporary data dir. The Actions build and the Custom App run
   since 2026-10-29 (cutover 15:23, cron jobs deleted). Not yet run inside the image: episode/reference tests (ping DF sizes, tcpdump; the
   first scheduled reference is 16:10) and a live episode or cure.
+- While the watchdog runs a diag and a cure (~3.5 min), supercronic skips the minute job `probe-light && watchdog` (it never overlaps a job
+  with itself), so there are no light samples in that window and the exact recovery time after a cure is not measured (2 Nov 2026: the
+  first sample after the cure, 3.5 min after onset, was fast).

@@ -14,7 +14,8 @@ next to this file (gitignored). If it is missing, ask the owner for it; never pu
 - Honest reporting: say what was verified and what is inference; retract wrong statements openly. Do not claim live behaviour you did not observe.
 - Everything implemented on the live system must also be in this repo (scripts, dashboards, alerts, docs), with a commit; live-only hacks are not acceptable.
 
-## Where things stand (2026-10-20)
+## Where things stand (2026-11-06)
+- **Wind-down:** the episodes stopped (last on the grid 28.10 01:48, one weaker off-grid 02.11 15:30, none since); the owner winds the lab down in two stages (2026-11-06): data exported to his Mac and docs/FINAL-REPORT.md written, then watch-only (light probe + alert, no cure/diag), later the TrueNAS apps are simply stopped. The modem got firmware 8.0.4 on 06.11 (new management address, the modem-side setup in RAM is gone; not re-installed).
 - Stack is deployed on the owner's TrueNAS in "layout B" (UI apps, see docs/TRUENAS.md). Owner's rule (2026-10-29): nothing of the project on the TrueNAS OS - no cron, no scripts; since 2026-10-29 15:23 the agent runs as the Custom App `u5g-agent` (image `ghcr.io/mvcaaa/u5g-agent` by digest, schedule `agent/crontab` via supercronic); the host cron jobs 1-5 and the host copies of the scripts are deleted; update/rollback with `deploy/truenas-app-update.sh`. The compose stack in this repo is the portable version.
 - Watchdog `mode=live` since 2026-10-20 21:00 (owner's decision): on each episode diag -> episode tests -> cure, at most one trigger per hour, no daily limit. First real auto-cure: episode 5 (2026-10-21 01:08, recovered ~8 min after onset): docs/episodes/2026-10-21-episode-5.md.
 - Episode 1 (2026-10-19) was captured and cured by hand: docs/episodes/2026-10-19-episode-1.md. Root cause on the operator's side is unknown.
