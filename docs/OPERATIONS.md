@@ -1,6 +1,12 @@
 # Operations
 
 ## Daily
+
+**Modes** (`data/mode`): `dry` = diag on a trigger, never a cure (default); `live` = diag, then a cure if the diag confirms; `watch` (since
+2026-11-06, the wind-down) = no modem contact at all - no diag, no cure, no ssh check (`u5g_watchdog_modem_reachable` = -1, the "modem
+unreachable" alert stays quiet); an episode with the fast-rule signature counts as confirmed and raises "episode started", slow samples
+without it are only logged. In `watch` the container runs `agent/crontab.watch` (light probe + watchdog only, ~1.4 GB/day) instead of
+`agent/crontab`; `agent/init.sh` picks the schedule at container start, so restart the app after changing the mode.
 - Look at the Grafana dashboard "U5G Radio Monitor (EN)": light probe and diagnostic probe, RTT/loss, Watchdog row. Alerts come to Telegram.
 - Hovering one graph shows the crosshair on all of them (shared crosshair). Manual notes (Ctrl/Cmd+click on a graph) appear only on that panel unless
   tagged `note`: the annotation query "Notes (all panels)" shows `note`-tagged annotations on every panel.

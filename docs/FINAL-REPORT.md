@@ -70,7 +70,8 @@ episodes stopped.
 
 ## Wind-down
 1. Data export and this report (done, 2026-11-06).
-2. Watch only: the agent keeps the 1 MB light probe and its alert, no cure and no diagnostics (~1.4 GB/day instead of ~4.3).
+2. Watch only: `data/mode` = `watch` - the agent keeps the 1 MB light probe and the "episode started" alert for an episode with the
+   reordering signature; no modem contact, no cure, no diagnostics (~1.4 GB/day instead of ~4.3).
 3. After 2-3 quiet weeks: stop the TrueNAS apps of the lab. The modem-side files in `/etc/persistent` (dispatcher, band-cycle, the watchdog
    key) and the custom band profile `0D` are the owner's to remove or keep.
 

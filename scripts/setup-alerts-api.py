@@ -21,7 +21,7 @@ RULES = [
    "Watchdog detected a slow-DNA episode in dry-run mode (no cure sent). diag saved on TrueNAS.", 700),
   ("U5G: episode started", "increase(u5g_watchdog_confirmed_total[10m])", "0s", "OK",
    "An episode was detected by the light probe and confirmed by the diag (DNA download below the confirmation threshold); the cure follows in live mode.", 700),
-  ("U5G: modem unreachable by watchdog", "1 - u5g_watchdog_modem_reachable", "10m", "Alerting",
+  ("U5G: modem unreachable by watchdog", "(1 - u5g_watchdog_modem_reachable) * (1 - u5g_watchdog_watch_mode)", "10m", "Alerting",
    "TrueNAS cannot reach the modem on ssh port 2222 (modem rebooted? dropbear on 2222 not running?). Auto-cure is blocked.", 900),
   ("U5G: probe is stale", "time() - u5g_probe_light_last_run_timestamp_seconds - 300", "5m", "Alerting",
    "probe-light.sh has not updated metrics for over 5 minutes (cron or node-exporter problem); episodes cannot be detected.", 1200),

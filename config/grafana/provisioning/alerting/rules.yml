@@ -195,7 +195,7 @@ groups:
       datasourceUid: prometheus
       model:
         refId: A
-        expr: 1 - u5g_watchdog_modem_reachable
+        expr: (1 - u5g_watchdog_modem_reachable) * (1 - u5g_watchdog_watch_mode)
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200

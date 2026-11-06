@@ -1,0 +1,3 @@
+# u5g agent schedule in watch mode (data/mode = watch): only the 1 MB light probe and the watchdog, which then neither contacts the modem
+# nor runs diagnostics; no probe.sh, radio snapshot or reference tests. Same format as agent/crontab.
+0  * * * * * *      bash /app/probe-light.sh && bash /app/watchdog.sh

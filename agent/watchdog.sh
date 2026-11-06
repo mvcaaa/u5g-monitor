@@ -1,6 +1,7 @@
 #!/bin/bash
 # u5g-watchdog v2: detect "DNA slow" episodes from the light probe (probe-light.sh, 1 MB every minute), run diag, optionally cure the modem.
-# Mode file: $D/mode = dry (default: diag only, no cure) | live (diag + cure)
+# Mode file: $D/mode = dry (default: diag only, no cure) | live (diag + cure) | watch (no ssh, no diag, no cure: an episode with the
+# fast-rule signature counts as confirmed and alerts, anything else is only logged; agent/init.sh then runs agent/crontab.watch)
 D=${D:-/data}
 OUTP=$D/textfile/u5g_watchdog.prom
 ST=$D/state; SE=$ST/state.env; LOG=$D/watchdog.log
@@ -89,7 +90,14 @@ elif [ "$ep" = 0 ] && [ "$LIGHT_ACTIVE" = 1 ]; then
   CONF_ACTIVE=0
 fi
 
-# 3. trigger: diag, then a cure if the diag confirms; MININT counts from the last confirmed trigger, an unconfirmed episode is re-checked after RECHECK (RECHECKF with the fast-rule signature)
+# 3. trigger (watch mode: no modem contact at all)
+if [ "$MODE" = watch ]; then
+  if [ "$ep" = 1 ] && [ "$CONF_ACTIVE" != 1 ] && [ "$fastsig" = 1 ]; then
+    CONF_ACTIVE=1; CONF_TOTAL=$((CONF_TOTAL + 1))
+    log "WATCH: episode with the fast-rule signature (${lt200}s, $looo out-of-order packets) - no diag, no cure"
+  fi
+else
+# diag, then a cure if the diag confirms; MININT counts from the last confirmed trigger, an unconfirmed episode is re-checked after RECHECK (RECHECKF with the fast-rule signature)
 recheck=$RECHECK; [ "$fastsig" = 1 ] && recheck=$RECHECKF
 if [ "$ep" = 1 ] && [ $((now - LAST_TRIGGER)) -ge "$MININT" ] && { [ "$CONF_ACTIVE" = 1 ] || [ $((now - LAST_CHECK)) -ge "$recheck" ]; } && { [ "$MAXDAY" = 0 ] || [ "$DAY_COUNT" -lt "$MAXDAY" ]; }; then
   if $SSHC ping 2>/dev/null | grep -q pong; then
@@ -149,7 +157,8 @@ elif [ "$ep" = 1 ] && [ $((now - LAST_SUPP)) -ge 900 ]; then
   LAST_SUPP=$now
   log "EPISODE ongoing but suppressed ($([ "$CONF_ACTIVE" = 1 ] && echo confirmed || echo "not confirmed, last check $((now - LAST_CHECK))s ago"); last cure trigger $([ "$LAST_TRIGGER" -gt 0 ] && echo "$((now - LAST_TRIGGER))s ago" || echo never), today $DAY_COUNT/$MAXDAY)"
 fi
-[ "$reach" = -1 ] && { $SSHC ping 2>/dev/null | grep -q pong && reach=1 || reach=0; }
+fi
+[ "$reach" = -1 ] && [ "$MODE" != watch ] && { $SSHC ping 2>/dev/null | grep -q pong && reach=1 || reach=0; }
 save
 
 # 4. metrics
@@ -160,6 +169,7 @@ save
   echo "u5g_watchdog_episode_confirmed $([ "$ep" = 1 ] && [ "$CONF_ACTIVE" = 1 ] && echo 1 || echo 0)"
   echo "u5g_watchdog_modem_reachable $reach"
   echo "u5g_watchdog_live_mode $([ "$MODE" = live ] && echo 1 || echo 0)"
+  echo "u5g_watchdog_watch_mode $([ "$MODE" = watch ] && echo 1 || echo 0)"
   echo "u5g_watchdog_cures_total $CURES_TOTAL"
   echo "u5g_watchdog_dryrun_triggers_total $DRY_TOTAL"
   echo "u5g_watchdog_unconfirmed_total $UNCONF_TOTAL"
